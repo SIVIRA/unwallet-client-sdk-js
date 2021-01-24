@@ -1,0 +1,14 @@
+{
+  "author": "SIVIRA",
+  "name": "dauth-sdk",
+  "description": "dAuth SDK for JavaScript",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/es6-promise": "^3.3.0",
+    "typescript": "^4.1.3"
+  }
+}
