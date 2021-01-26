@@ -31,45 +31,34 @@ class DAuth {
     }
     initChild() {
         return new Promise((resolve, reject) => {
-            try {
-                this.child = document.createElement('iframe');
-                this.child.id = this.CHILD_ID;
-                this.child.src = this.CHILD_URI;
-                this.child.style.bottom = '0';
-                this.child.style.height = '0';
-                this.child.style.position = 'fixed';
-                this.child.style.right = '0';
-                this.child.style.width = '0';
-                this.child.style.zIndex = '2147483647';
-                this.child.setAttribute('frameborder', '0');
-                this.child.setAttribute('scrolling', 'no');
-                document.body.appendChild(this.child);
-            }
-            catch (e) {
-                reject(e);
-                return;
-            }
+            this.child = document.createElement('iframe');
+            this.child.id = this.CHILD_ID;
+            this.child.src = this.CHILD_URI;
+            this.child.style.bottom = '0';
+            this.child.style.height = '0';
+            this.child.style.position = 'fixed';
+            this.child.style.right = '0';
+            this.child.style.width = '0';
+            this.child.style.zIndex = '2147483647';
+            this.child.setAttribute('frameborder', '0');
+            this.child.setAttribute('scrolling', 'no');
+            document.body.appendChild(this.child);
             this.child.onload = () => {
-                try {
-                    const chan = new MessageChannel();
-                    chan.port1.onmessage = (ev) => {
-                        this.closeMessagePorts(chan);
-                        if (ev.data.error) {
-                            reject(ev.data.error);
-                            return;
-                        }
-                        resolve();
-                    };
-                    this.postXAction({
-                        method: 'initialize',
-                        args: {
-                            origin: window.origin,
-                        },
-                    }, chan.port2);
-                }
-                catch (e) {
-                    reject(e);
-                }
+                const chan = new MessageChannel();
+                chan.port1.onmessage = (ev) => {
+                    this.closeMessagePorts(chan);
+                    if (ev.data.error) {
+                        reject(ev.data.error);
+                        return;
+                    }
+                    resolve();
+                };
+                this.postXAction({
+                    method: 'initialize',
+                    args: {
+                        origin: window.origin,
+                    },
+                }, chan.port2);
             };
             this.child.onerror = (err) => {
                 reject(err);
