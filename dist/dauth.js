@@ -13,11 +13,11 @@ exports.DAuth = void 0;
 const eosjs_1 = require("eosjs");
 class DAuth {
     constructor() {
-        this.CHILD_ID = 'child';
-        this.CHILD_ORIGIN = 'https://id.dauth.world';
-        this.CHILD_URI = 'https://id.dauth.world/x';
-        this.RELAYER_ACCOUNT_NAME = 'pcontroller1';
-        this.ASSETS_CONTRACT_ACCOUNT_NAME = 'pidassets111';
+        this.CHILD_ID = "child";
+        this.CHILD_ORIGIN = "https://id.dauth.world";
+        this.CHILD_URI = "https://id.dauth.world/x";
+        this.RELAYER_ACCOUNT_NAME = "pcontroller1";
+        this.ASSETS_CONTRACT_ACCOUNT_NAME = "pmultiasset3";
         this.routes = new Map();
     }
     static init() {
@@ -31,17 +31,17 @@ class DAuth {
     }
     initChild() {
         return new Promise((resolve, reject) => {
-            this.child = document.createElement('iframe');
+            this.child = document.createElement("iframe");
             this.child.id = this.CHILD_ID;
             this.child.src = this.CHILD_URI;
-            this.child.style.bottom = '0';
-            this.child.style.height = '0';
-            this.child.style.position = 'fixed';
-            this.child.style.right = '0';
-            this.child.style.width = '0';
-            this.child.style.zIndex = '2147483647';
-            this.child.setAttribute('frameborder', '0');
-            this.child.setAttribute('scrolling', 'no');
+            this.child.style.bottom = "0";
+            this.child.style.height = "0";
+            this.child.style.position = "fixed";
+            this.child.style.right = "0";
+            this.child.style.width = "0";
+            this.child.style.zIndex = "2147483647";
+            this.child.setAttribute("frameborder", "0");
+            this.child.setAttribute("scrolling", "no");
             document.body.appendChild(this.child);
             this.child.onload = () => {
                 const chan = new MessageChannel();
@@ -54,7 +54,7 @@ class DAuth {
                     resolve();
                 };
                 this.postXAction({
-                    method: 'initialize',
+                    method: "initialize",
                     args: {
                         origin: window.origin,
                     },
@@ -66,11 +66,11 @@ class DAuth {
         });
     }
     initRoutes() {
-        this.routes.set('getWindowSize', this.handleGetWindowSize);
-        this.routes.set('resizeChild', this.handleResizeChild);
+        this.routes.set("getWindowSize", this.handleGetWindowSize);
+        this.routes.set("resizeChild", this.handleResizeChild);
     }
     initEventListener() {
-        window.addEventListener('message', (ev) => __awaiter(this, void 0, void 0, function* () {
+        window.addEventListener("message", (ev) => __awaiter(this, void 0, void 0, function* () {
             if (ev.origin !== this.CHILD_ORIGIN) {
                 return;
             }
@@ -80,11 +80,13 @@ class DAuth {
             }
             const action = ev.data;
             if (!this.routes.has(action.method)) {
-                this.responseError(port, 'unknown x action');
+                this.responseError(port, "unknown x action");
                 return;
             }
             try {
-                const result = yield this.routes.get(action.method).call(this, action.args);
+                const result = yield this.routes
+                    .get(action.method)
+                    .call(this, action.args);
                 this.responseSuccess(port, result);
             }
             catch (e) {
@@ -113,22 +115,22 @@ class DAuth {
     }
     responseError(port, err) {
         this.response(port, {
-            error: typeof err === 'string' ? err : (err.message || JSON.stringify(err)),
+            error: typeof err === "string" ? err : err.message || JSON.stringify(err),
         });
     }
     response(port, data) {
         port.postMessage(data);
     }
-    createAssetTransferTransaction(receiverID, assetSourceID, quantity, memo = '') {
+    createAssetTransferTransaction(receiverID, assetSourceID, quantity, memo = "") {
         return __awaiter(this, void 0, void 0, function* () {
-            const action = 'transfer';
+            const action = "transfer";
             const dataBuf = new eosjs_1.Serialize.SerialBuffer();
             dataBuf.pushName(receiverID);
             dataBuf.pushNumberAsUint64(assetSourceID);
             dataBuf.pushAsset(quantity);
             dataBuf.pushString(memo);
             const data = dataBuf.asUint8Array();
-            const sig = yield this.signTransaction(this.ASSETS_CONTRACT_ACCOUNT_NAME, 'transfer', data);
+            const sig = yield this.signTransaction(this.ASSETS_CONTRACT_ACCOUNT_NAME, "transfer", data);
             return {
                 contract: this.ASSETS_CONTRACT_ACCOUNT_NAME,
                 action: action,
@@ -149,7 +151,7 @@ class DAuth {
                 resolve(ev.data.result.signature);
             };
             this.postXAction({
-                method: 'signTransaction',
+                method: "signTransaction",
                 args: {
                     relayer: this.RELAYER_ACCOUNT_NAME,
                     contract: contract,

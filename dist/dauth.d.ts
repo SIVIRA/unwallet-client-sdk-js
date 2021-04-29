@@ -1,4 +1,4 @@
-import { SignedTransaction } from './transaction';
+import { SignedTransaction } from "./transaction";
 export declare class DAuth {
     private CHILD_ID;
     private CHILD_ORIGIN;
