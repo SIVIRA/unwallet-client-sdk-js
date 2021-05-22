@@ -18,11 +18,11 @@ const dAuth = await DAuth.init({
 });
 ```
 
-### Authorization
+### Requesting a user's ID token in accordance with OIDC (OpenID Connect)
 
 ```js
 dAuth.authorize({
-  redirectURL: "http://your.domain.com/callback",
+  redirectURL: "http://your.app.com/callback",
   nonce: "pdITKAtep0pfPOrUXdzjqW6gKvXezurJ", // arbitrary string to prevent replay attacks
 });
 ```
