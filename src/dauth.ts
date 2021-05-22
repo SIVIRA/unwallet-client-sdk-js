@@ -4,18 +4,23 @@ import { SignedTransaction } from "./transaction";
 import { XAction } from "./x-action";
 
 export class DAuth {
+  private AUTH_URL = "https://auth.id-dev.dauth.world/authorize";
+
   private CHILD_ID = "child";
-  private CHILD_ORIGIN = "https://id.dauth.world";
-  private CHILD_URI = "https://id.dauth.world/x";
+  private CHILD_ORIGIN = "https://id-dev.dauth.world";
+  private CHILD_URL = "https://id-dev.dauth.world/x";
 
   private RELAYER_ACCOUNT_NAME = "pcontroller1";
   private ASSETS_CONTRACT_ACCOUNT_NAME = "pmultiasset3";
 
+  private clientID: string;
   private child: HTMLIFrameElement;
   private routes = new Map<string, (args: any) => Promise<any>>();
 
-  public static async init(): Promise<DAuth> {
+  public static async init(args: { clientID: string }): Promise<DAuth> {
     const dAuth = new DAuth();
+
+    dAuth.clientID = args.clientID;
 
     await dAuth.initChild();
     dAuth.initRoutes();
@@ -28,7 +33,7 @@ export class DAuth {
     return new Promise((resolve, reject) => {
       this.child = document.createElement("iframe");
       this.child.id = this.CHILD_ID;
-      this.child.src = this.CHILD_URI;
+      this.child.src = this.CHILD_URL;
       this.child.style.bottom = "0";
       this.child.style.height = "0";
       this.child.style.position = "fixed";
@@ -120,6 +125,18 @@ export class DAuth {
 
   private response(port: MessagePort, data: any): void {
     port.postMessage(data);
+  }
+
+  public authorize(args: { redirectURL: string; nonce: string }): void {
+    const authURL = new URL(this.AUTH_URL);
+
+    authURL.searchParams.set("response_type", "id_token");
+    authURL.searchParams.set("client_id", this.clientID);
+    authURL.searchParams.set("scope", "openid profile");
+    authURL.searchParams.set("redirect_uri", args.redirectURL);
+    authURL.searchParams.set("nonce", args.nonce);
+
+    location.assign(authURL.toString());
   }
 
   public async createAssetTransferTransaction(
