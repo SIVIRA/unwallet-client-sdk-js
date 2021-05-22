@@ -132,16 +132,20 @@ class DAuth {
         authURL.searchParams.set("nonce", args.nonce);
         location.assign(authURL.toString());
     }
-    createAssetTransferTransaction(receiverID, assetSourceID, quantity, memo = "") {
+    createAssetTransferTransaction(args) {
         return __awaiter(this, void 0, void 0, function* () {
             const action = "transfer";
             const dataBuf = new eosjs_1.Serialize.SerialBuffer();
-            dataBuf.pushName(receiverID);
-            dataBuf.pushNumberAsUint64(assetSourceID);
-            dataBuf.pushAsset(quantity);
-            dataBuf.pushString(memo);
+            dataBuf.pushName(args.receiverID);
+            dataBuf.pushNumberAsUint64(args.assetSourceID);
+            dataBuf.pushAsset(args.quantity);
+            dataBuf.pushString(args.memo || "");
             const data = dataBuf.asUint8Array();
-            const sig = yield this.signTransaction(this.ASSETS_CONTRACT_ACCOUNT_NAME, "transfer", data);
+            const sig = yield this.signTransaction({
+                contract: this.ASSETS_CONTRACT_ACCOUNT_NAME,
+                action: "transfer",
+                data: data,
+            });
             return {
                 contract: this.ASSETS_CONTRACT_ACCOUNT_NAME,
                 action: action,
@@ -150,7 +154,7 @@ class DAuth {
             };
         });
     }
-    signTransaction(contract, action, data) {
+    signTransaction(args) {
         return new Promise((resolve, reject) => {
             const chan = new MessageChannel();
             chan.port1.onmessage = (ev) => {
@@ -165,9 +169,9 @@ class DAuth {
                 method: "signTransaction",
                 args: {
                     relayer: this.RELAYER_ACCOUNT_NAME,
-                    contract: contract,
-                    action: action,
-                    data: data,
+                    contract: args.contract,
+                    action: args.action,
+                    data: args.data,
                 },
             }, chan.port2);
         });

@@ -24,8 +24,17 @@ export declare class DAuth {
         redirectURL: string;
         nonce: string;
     }): void;
-    createAssetTransferTransaction(receiverID: string, assetSourceID: number, quantity: string, memo?: string): Promise<SignedTransaction>;
-    signTransaction(contract: string, action: string, data: Uint8Array): Promise<string>;
+    createAssetTransferTransaction(args: {
+        receiverID: string;
+        assetSourceID: number;
+        quantity: string;
+        memo?: string;
+    }): Promise<SignedTransaction>;
+    signTransaction(args: {
+        contract: string;
+        action: string;
+        data: Uint8Array;
+    }): Promise<string>;
     private postXAction;
     private closeMessagePorts;
 }
