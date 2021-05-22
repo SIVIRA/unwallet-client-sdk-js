@@ -13,16 +13,18 @@ exports.DAuth = void 0;
 const eosjs_1 = require("eosjs");
 class DAuth {
     constructor() {
+        this.AUTH_URL = "https://auth.id-dev.dauth.world/authorize";
         this.CHILD_ID = "child";
-        this.CHILD_ORIGIN = "https://id.dauth.world";
-        this.CHILD_URI = "https://id.dauth.world/x";
+        this.CHILD_ORIGIN = "https://id-dev.dauth.world";
+        this.CHILD_URL = "https://id-dev.dauth.world/x";
         this.RELAYER_ACCOUNT_NAME = "pcontroller1";
         this.ASSETS_CONTRACT_ACCOUNT_NAME = "pmultiasset3";
         this.routes = new Map();
     }
-    static init() {
+    static init(args) {
         return __awaiter(this, void 0, void 0, function* () {
             const dAuth = new DAuth();
+            dAuth.clientID = args.clientID;
             yield dAuth.initChild();
             dAuth.initRoutes();
             dAuth.initEventListener();
@@ -33,7 +35,7 @@ class DAuth {
         return new Promise((resolve, reject) => {
             this.child = document.createElement("iframe");
             this.child.id = this.CHILD_ID;
-            this.child.src = this.CHILD_URI;
+            this.child.src = this.CHILD_URL;
             this.child.style.bottom = "0";
             this.child.style.height = "0";
             this.child.style.position = "fixed";
@@ -120,6 +122,15 @@ class DAuth {
     }
     response(port, data) {
         port.postMessage(data);
+    }
+    authorize(args) {
+        const authURL = new URL(this.AUTH_URL);
+        authURL.searchParams.set("response_type", "id_token");
+        authURL.searchParams.set("client_id", this.clientID);
+        authURL.searchParams.set("scope", "openid profile");
+        authURL.searchParams.set("redirect_uri", args.redirectURL);
+        authURL.searchParams.set("nonce", args.nonce);
+        location.assign(authURL.toString());
     }
     createAssetTransferTransaction(receiverID, assetSourceID, quantity, memo = "") {
         return __awaiter(this, void 0, void 0, function* () {
