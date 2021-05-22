@@ -27,12 +27,12 @@ dAuth.authorize({
 });
 ```
 
-### Request for signature
+### Requesting a signature for an asset transfer transaction
 
 ```js
-const tx = await dAuth.createAssetTransferTransaction(
-  "DESTINATION_ACCOUNT_NAME",
-  1, // asset source ID
-  "1 TOKEN" // quantity
-);
+const tx = await dAuth.signTransaction({
+  receiverID: "receiver1.pid",
+  assetSourceID: 1,
+  quantity: "1 TOKEN",
+});
 ```

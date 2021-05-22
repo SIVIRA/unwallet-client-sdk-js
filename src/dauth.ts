@@ -139,26 +139,26 @@ export class DAuth {
     location.assign(authURL.toString());
   }
 
-  public async createAssetTransferTransaction(
-    receiverID: string,
-    assetSourceID: number,
-    quantity: string,
-    memo: string = ""
-  ): Promise<SignedTransaction> {
+  public async createAssetTransferTransaction(args: {
+    receiverID: string;
+    assetSourceID: number;
+    quantity: string;
+    memo?: string;
+  }): Promise<SignedTransaction> {
     const action = "transfer";
 
     const dataBuf = new Serialize.SerialBuffer();
-    dataBuf.pushName(receiverID);
-    dataBuf.pushNumberAsUint64(assetSourceID);
-    dataBuf.pushAsset(quantity);
-    dataBuf.pushString(memo);
+    dataBuf.pushName(args.receiverID);
+    dataBuf.pushNumberAsUint64(args.assetSourceID);
+    dataBuf.pushAsset(args.quantity);
+    dataBuf.pushString(args.memo || "");
     const data = dataBuf.asUint8Array();
 
-    const sig = await this.signTransaction(
-      this.ASSETS_CONTRACT_ACCOUNT_NAME,
-      "transfer",
-      data
-    );
+    const sig = await this.signTransaction({
+      contract: this.ASSETS_CONTRACT_ACCOUNT_NAME,
+      action: "transfer",
+      data: data,
+    });
 
     return {
       contract: this.ASSETS_CONTRACT_ACCOUNT_NAME,
@@ -168,11 +168,11 @@ export class DAuth {
     };
   }
 
-  public signTransaction(
-    contract: string,
-    action: string,
-    data: Uint8Array
-  ): Promise<string> {
+  public signTransaction(args: {
+    contract: string;
+    action: string;
+    data: Uint8Array;
+  }): Promise<string> {
     return new Promise((resolve, reject) => {
       const chan = new MessageChannel();
       chan.port1.onmessage = (ev: MessageEvent) => {
@@ -188,9 +188,9 @@ export class DAuth {
           method: "signTransaction",
           args: {
             relayer: this.RELAYER_ACCOUNT_NAME,
-            contract: contract,
-            action: action,
-            data: data,
+            contract: args.contract,
+            action: args.action,
+            data: args.data,
           },
         },
         chan.port2
