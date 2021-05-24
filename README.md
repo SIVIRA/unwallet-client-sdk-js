@@ -13,7 +13,7 @@ $ npm i ssh://git@github.com:SIVIRA/dauth-sdk-js.git
 ### Initialization
 
 ```js
-import { DAuth } from "dauth-sdk-js";
+import { DAuth } from "dauth-sdk";
 
 const dAuth = await DAuth.init({
   clientID: "YOUR_CLIENT_ID",
