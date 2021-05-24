@@ -10,7 +10,7 @@ $ npm i ssh://git@github.com:SIVIRA/dauth-sdk-js.git
 
 ## Example
 
-You need to create an "application" (client) with dAuth in advance.
+To execute the sample codes below, you need to create an "application" (client) with dAuth in advance.
 
 ### Initialization
 
