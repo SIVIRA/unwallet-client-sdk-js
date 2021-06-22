@@ -21,6 +21,7 @@ export declare class DAuth {
     private responseError;
     private response;
     authorize(args: {
+        responseMode?: string;
         redirectURL: string;
         nonce: string;
     }): void;
