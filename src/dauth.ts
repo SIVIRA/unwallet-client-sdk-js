@@ -127,10 +127,19 @@ export class DAuth {
     port.postMessage(data);
   }
 
-  public authorize(args: { redirectURL: string; nonce: string }): void {
+  public authorize(args: {
+    responseMode?: string;
+    redirectURL: string;
+    nonce: string;
+  }): void {
+    if (!args.responseMode) {
+      args.responseMode = "fragment";
+    }
+
     const authURL = new URL(this.AUTH_URL);
 
     authURL.searchParams.set("response_type", "id_token");
+    authURL.searchParams.set("response_mode", args.responseMode);
     authURL.searchParams.set("client_id", this.clientID);
     authURL.searchParams.set("scope", "openid profile");
     authURL.searchParams.set("redirect_uri", args.redirectURL);
