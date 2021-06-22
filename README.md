@@ -5,7 +5,7 @@ dAuth SDK for JavaScript
 ## Installation
 
 ```sh
-$ npm i ssh://git@github.com:SIVIRA/dauth-sdk-js.git
+$ npm i SIVIRA/dauth-sdk-js
 ```
 
 ## Example
