@@ -1,22 +1,16 @@
-import { SignedTransaction } from "./transaction";
 export declare class DAuth {
-    private AUTH_URL;
-    private CHILD_ID;
-    private CHILD_ORIGIN;
-    private CHILD_URL;
-    private RELAYER_ACCOUNT_NAME;
-    private ASSETS_CONTRACT_ACCOUNT_NAME;
-    private clientID;
-    private child;
+    private config;
+    private x;
     private routes;
     static init(args: {
         clientID: string;
+        env?: string;
     }): Promise<DAuth>;
     private initChild;
     private initRoutes;
     private initEventListener;
     private handleGetWindowSize;
-    private handleResizeChild;
+    private handleResizeX;
     private responseSuccess;
     private responseError;
     private response;
@@ -25,16 +19,12 @@ export declare class DAuth {
         redirectURL: string;
         nonce: string;
     }): void;
-    createAssetTransferTransaction(args: {
-        receiverID: string;
-        assetSourceID: number;
-        quantity: string;
-        memo?: string;
-    }): Promise<SignedTransaction>;
-    signTransaction(args: {
-        contract: string;
-        action: string;
-        data: Uint8Array;
+    createPresentation(args: {
+        credentialType: string;
+        challenge: string;
+    }): Promise<string>;
+    sign(args: {
+        message: string;
     }): Promise<string>;
     private postXAction;
     private closeMessagePorts;

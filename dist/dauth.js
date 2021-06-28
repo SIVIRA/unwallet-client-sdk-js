@@ -10,21 +10,44 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DAuth = void 0;
-const eosjs_1 = require("eosjs");
+const configs = new Map();
+configs.set("prod", {
+    clientID: "",
+    auth: {
+        url: "https://auth.id.dauth.world/authorize",
+    },
+    x: {
+        origin: "https://id.dauth.world",
+        url: "https://id.dauth.world/x",
+        elementID: "x",
+    },
+});
+configs.set("dev", {
+    clientID: "",
+    auth: {
+        url: "https://auth.id-dev.dauth.world/authorize",
+    },
+    x: {
+        origin: "https://id-dev.dauth.world",
+        url: "https://id-dev.dauth.world/x",
+        elementID: "x",
+    },
+});
 class DAuth {
     constructor() {
-        this.AUTH_URL = "https://auth.id-dev.dauth.world/authorize";
-        this.CHILD_ID = "child";
-        this.CHILD_ORIGIN = "https://id-dev.dauth.world";
-        this.CHILD_URL = "https://id-dev.dauth.world/x";
-        this.RELAYER_ACCOUNT_NAME = "pcontroller1";
-        this.ASSETS_CONTRACT_ACCOUNT_NAME = "pmultiasset3";
         this.routes = new Map();
     }
     static init(args) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (!args.env) {
+                args.env = "prod";
+            }
+            if (!configs.has(args.env)) {
+                throw Error("invalid env");
+            }
             const dAuth = new DAuth();
-            dAuth.clientID = args.clientID;
+            dAuth.config = configs.get(args.env);
+            dAuth.config.clientID = args.clientID;
             yield dAuth.initChild();
             dAuth.initRoutes();
             dAuth.initEventListener();
@@ -33,19 +56,19 @@ class DAuth {
     }
     initChild() {
         return new Promise((resolve, reject) => {
-            this.child = document.createElement("iframe");
-            this.child.id = this.CHILD_ID;
-            this.child.src = this.CHILD_URL;
-            this.child.style.bottom = "0";
-            this.child.style.height = "0";
-            this.child.style.position = "fixed";
-            this.child.style.right = "0";
-            this.child.style.width = "0";
-            this.child.style.zIndex = "2147483647";
-            this.child.setAttribute("frameborder", "0");
-            this.child.setAttribute("scrolling", "no");
-            document.body.appendChild(this.child);
-            this.child.onload = () => {
+            this.x = document.createElement("iframe");
+            this.x.id = this.config.x.elementID;
+            this.x.src = this.config.x.url;
+            this.x.style.bottom = "0";
+            this.x.style.height = "0";
+            this.x.style.position = "fixed";
+            this.x.style.right = "0";
+            this.x.style.width = "0";
+            this.x.style.zIndex = "2147483647";
+            this.x.setAttribute("frameborder", "0");
+            this.x.setAttribute("scrolling", "no");
+            document.body.appendChild(this.x);
+            this.x.onload = () => {
                 const chan = new MessageChannel();
                 chan.port1.onmessage = (ev) => {
                     this.closeMessagePorts(chan);
@@ -62,18 +85,18 @@ class DAuth {
                     },
                 }, chan.port2);
             };
-            this.child.onerror = (err) => {
+            this.x.onerror = (err) => {
                 reject(err);
             };
         });
     }
     initRoutes() {
         this.routes.set("getWindowSize", this.handleGetWindowSize);
-        this.routes.set("resizeChild", this.handleResizeChild);
+        this.routes.set("resizeX", this.handleResizeX);
     }
     initEventListener() {
         window.addEventListener("message", (ev) => __awaiter(this, void 0, void 0, function* () {
-            if (ev.origin !== this.CHILD_ORIGIN) {
+            if (ev.origin !== this.config.x.origin) {
                 return;
             }
             const port = ev.ports[0];
@@ -104,10 +127,10 @@ class DAuth {
             };
         });
     }
-    handleResizeChild(args) {
+    handleResizeX(args) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.child.style.height = args.height;
-            this.child.style.width = args.width;
+            this.x.style.height = args.height;
+            this.x.style.width = args.width;
         });
     }
     responseSuccess(port, result = null) {
@@ -127,38 +150,33 @@ class DAuth {
         if (!args.responseMode) {
             args.responseMode = "fragment";
         }
-        const authURL = new URL(this.AUTH_URL);
+        const authURL = new URL(this.config.auth.url);
         authURL.searchParams.set("response_type", "id_token");
         authURL.searchParams.set("response_mode", args.responseMode);
-        authURL.searchParams.set("client_id", this.clientID);
+        authURL.searchParams.set("client_id", this.config.clientID);
         authURL.searchParams.set("scope", "openid profile");
         authURL.searchParams.set("redirect_uri", args.redirectURL);
         authURL.searchParams.set("nonce", args.nonce);
         location.assign(authURL.toString());
     }
-    createAssetTransferTransaction(args) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const action = "transfer";
-            const dataBuf = new eosjs_1.Serialize.SerialBuffer();
-            dataBuf.pushName(args.receiverID);
-            dataBuf.pushNumberAsUint64(args.assetSourceID);
-            dataBuf.pushAsset(args.quantity);
-            dataBuf.pushString(args.memo || "");
-            const data = dataBuf.asUint8Array();
-            const sig = yield this.signTransaction({
-                contract: this.ASSETS_CONTRACT_ACCOUNT_NAME,
-                action: "transfer",
-                data: data,
-            });
-            return {
-                contract: this.ASSETS_CONTRACT_ACCOUNT_NAME,
-                action: action,
-                data: eosjs_1.Serialize.arrayToHex(data),
-                signature: sig,
+    createPresentation(args) {
+        return new Promise((resolve, reject) => {
+            const chan = new MessageChannel();
+            chan.port1.onmessage = (ev) => {
+                this.closeMessagePorts(chan);
+                if (ev.data.error) {
+                    reject(ev.data.error);
+                    return;
+                }
+                resolve(ev.data.result.presentation);
             };
+            this.postXAction({
+                method: "createPresentation",
+                args: args,
+            }, chan.port2);
         });
     }
-    signTransaction(args) {
+    sign(args) {
         return new Promise((resolve, reject) => {
             const chan = new MessageChannel();
             chan.port1.onmessage = (ev) => {
@@ -170,18 +188,13 @@ class DAuth {
                 resolve(ev.data.result.signature);
             };
             this.postXAction({
-                method: "signTransaction",
-                args: {
-                    relayer: this.RELAYER_ACCOUNT_NAME,
-                    contract: args.contract,
-                    action: args.action,
-                    data: args.data,
-                },
+                method: "sign",
+                args: args,
             }, chan.port2);
         });
     }
     postXAction(action, port) {
-        this.child.contentWindow.postMessage(action, this.CHILD_ORIGIN, [port]);
+        this.x.contentWindow.postMessage(action, this.config.x.origin, [port]);
     }
     closeMessagePorts(chan) {
         chan.port1.close();
