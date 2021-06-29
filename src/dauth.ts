@@ -1,3 +1,5 @@
+import { Renderer2 } from "@angular/core";
+
 import { Config } from "./config";
 import { XAction } from "./x-action";
 
@@ -30,6 +32,8 @@ export class DAuth {
   private x: HTMLIFrameElement;
   private routes = new Map<string, (args: any) => Promise<any>>();
 
+  private ngRenderer: Renderer2;
+
   public static async init(args: {
     clientID: string;
     env?: string;
@@ -55,6 +59,7 @@ export class DAuth {
   private initChild(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.x = document.createElement("iframe");
+
       this.x.id = this.config.x.elementID;
       this.x.src = this.config.x.url;
       this.x.style.bottom = "0";
@@ -65,7 +70,9 @@ export class DAuth {
       this.x.style.zIndex = "2147483647";
       this.x.setAttribute("frameborder", "0");
       this.x.setAttribute("scrolling", "no");
+
       document.body.appendChild(this.x);
+
       this.x.onload = () => {
         const chan = new MessageChannel();
         chan.port1.onmessage = (ev: MessageEvent) => {
@@ -86,6 +93,7 @@ export class DAuth {
           chan.port2
         );
       };
+
       this.x.onerror = (err: string | Event) => {
         reject(err);
       };
@@ -130,8 +138,13 @@ export class DAuth {
   }
 
   private async handleResizeX(args: any): Promise<any> {
-    this.x.style.height = args.height;
-    this.x.style.width = args.width;
+    if (this.ngRenderer) {
+      this.ngRenderer.setStyle(this.x, "height", `${args.height}px`);
+      this.ngRenderer.setStyle(this.x, "width", `${args.width}px`);
+    } else {
+      this.x.style.height = args.height;
+      this.x.style.width = args.width;
+    }
   }
 
   private responseSuccess(port: MessagePort, result: any = null): void {
@@ -148,6 +161,10 @@ export class DAuth {
 
   private response(port: MessagePort, data: any): void {
     port.postMessage(data);
+  }
+
+  public setNgRenderer(ngRenderer: Renderer2) {
+    this.ngRenderer = ngRenderer;
   }
 
   public authorize(args: {

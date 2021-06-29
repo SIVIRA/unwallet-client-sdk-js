@@ -8,6 +8,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@angular/core": "^12.1.0",
     "eosjs": "^21.0.3"
   },
   "devDependencies": {

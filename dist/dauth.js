@@ -129,8 +129,14 @@ class DAuth {
     }
     handleResizeX(args) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.x.style.height = args.height;
-            this.x.style.width = args.width;
+            if (this.ngRenderer) {
+                this.ngRenderer.setStyle(this.x, "height", `${args.height}px`);
+                this.ngRenderer.setStyle(this.x, "width", `${args.width}px`);
+            }
+            else {
+                this.x.style.height = args.height;
+                this.x.style.width = args.width;
+            }
         });
     }
     responseSuccess(port, result = null) {
@@ -145,6 +151,9 @@ class DAuth {
     }
     response(port, data) {
         port.postMessage(data);
+    }
+    setNgRenderer(ngRenderer) {
+        this.ngRenderer = ngRenderer;
     }
     authorize(args) {
         if (!args.responseMode) {
