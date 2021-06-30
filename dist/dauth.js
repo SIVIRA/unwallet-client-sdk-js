@@ -13,7 +13,7 @@ configs.set("prod", {
 configs.set("dev", {
     clientID: "",
     dAuth: {
-        baseURL: "http://localhost:4200",
+        baseURL: "https://id-dev.dauth.world",
         authURL: "https://auth.id-dev.dauth.world/authorize",
         wsAPIURL: "wss://ws-api.admin.id-dev.dauth.world",
     },
