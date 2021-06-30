@@ -16,5 +16,8 @@ export declare class DAuth {
         credentialType: string;
         challenge: string;
     }): Promise<string>;
+    private getConnectionID;
+    private sendWSMessage;
+    private openWindow;
 }
 //# sourceMappingURL=dauth.d.ts.map
