@@ -19,16 +19,63 @@ configs.set("dev", {
     },
 });
 var DAuth = /** @class */ (function () {
-    function DAuth(args) {
-        if (!args.env) {
-            args.env = "prod";
-        }
-        if (!configs.has(args.env)) {
-            throw Error("invalid env");
-        }
-        this.config = configs.get(args.env);
-        this.config.clientID = args.clientID;
+    function DAuth(config, ws) {
+        this.config = config;
+        this.ws = ws;
+        this.connectionID = "";
+        this.resolve = function (result) { };
+        this.reject = function (reason) { };
     }
+    DAuth.init = function (args) {
+        return new Promise(function (resolve, reject) {
+            if (!args.env) {
+                args.env = "prod";
+            }
+            if (!configs.has(args.env)) {
+                throw Error("invalid env");
+            }
+            var config = configs.get(args.env);
+            config.clientID = args.clientID;
+            var dAuth = new DAuth(config, new WebSocket(config.dAuth.wsAPIURL));
+            dAuth.ws.onerror = function (event) {
+                reject("websocket connection failed");
+            };
+            dAuth.ws.onmessage = function (event) {
+                var msg = JSON.parse(event.data);
+                switch (msg.type) {
+                    case "connectionID":
+                        dAuth.connectionID = msg.data.value;
+                        resolve(dAuth);
+                        break;
+                    case "signature":
+                        if (!!msg.data.value) {
+                            dAuth.resolve(msg.data.value);
+                        }
+                        else {
+                            dAuth.reject("canceled");
+                        }
+                        dAuth.initPromiseArgs();
+                        break;
+                    case "presentation":
+                        if (!!msg.data.value) {
+                            dAuth.resolve(msg.data.value);
+                        }
+                        else {
+                            dAuth.reject("canceled");
+                        }
+                        dAuth.initPromiseArgs();
+                        break;
+                }
+            };
+            dAuth.ws.onopen = function (event) {
+                dAuth.getConnectionID(dAuth.ws);
+            };
+        });
+    };
+    DAuth.prototype.initPromiseArgs = function () {
+        this.resolve = function (result) { };
+        this.reject = function (reason) { };
+    };
     DAuth.prototype.authorize = function (args) {
         if (!args.responseMode) {
             args.responseMode = "fragment";
@@ -45,64 +92,24 @@ var DAuth = /** @class */ (function () {
     DAuth.prototype.sign = function (args) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var ws = new WebSocket(_this.config.dAuth.wsAPIURL);
-            ws.onerror = function (event) {
-                reject("websocket connection failed");
-            };
-            ws.onmessage = function (event) {
-                var msg = JSON.parse(event.data);
-                switch (msg.type) {
-                    case "connectionID":
-                        var url = new URL(_this.config.dAuth.baseURL + "/x/sign");
-                        url.searchParams.set("connectionID", msg.data.value);
-                        url.searchParams.set("message", args.message);
-                        _this.openWindow(url);
-                        break;
-                    case "signature":
-                        ws.close();
-                        if (!msg.data.value) {
-                            reject("canceled");
-                            break;
-                        }
-                        resolve(msg.data.value);
-                        break;
-                }
-            };
-            ws.onopen = function (event) {
-                _this.getConnectionID(ws);
-            };
+            _this.resolve = resolve;
+            _this.reject = reject;
+            var url = new URL(_this.config.dAuth.baseURL + "/x/sign");
+            url.searchParams.set("connectionID", _this.connectionID);
+            url.searchParams.set("message", args.message);
+            _this.openWindow(url);
         });
     };
     DAuth.prototype.createPresentation = function (args) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var ws = new WebSocket(_this.config.dAuth.wsAPIURL);
-            ws.onerror = function (event) {
-                reject("websocket connection failed");
-            };
-            ws.onmessage = function (event) {
-                var msg = JSON.parse(event.data);
-                switch (msg.type) {
-                    case "connectionID":
-                        var url = new URL(_this.config.dAuth.baseURL + "/x/createPresentation");
-                        url.searchParams.set("connectionID", msg.data.value);
-                        url.searchParams.set("credentialType", args.credentialType);
-                        url.searchParams.set("challenge", args.challenge);
-                        _this.openWindow(url);
-                        break;
-                    case "presentation":
-                        ws.close();
-                        if (!msg.data.value) {
-                            reject("canceled");
-                            break;
-                        }
-                        resolve(msg.data.value);
-                        break;
-                }
-            };
-            ws.onopen = function (event) {
-                _this.getConnectionID(ws);
-            };
+            _this.resolve = resolve;
+            _this.reject = reject;
+            var url = new URL(_this.config.dAuth.baseURL + "/x/createPresentation");
+            url.searchParams.set("connectionID", _this.connectionID);
+            url.searchParams.set("credentialType", args.credentialType);
+            url.searchParams.set("challenge", args.challenge);
+            _this.openWindow(url);
         });
     };
     DAuth.prototype.getConnectionID = function (ws) {

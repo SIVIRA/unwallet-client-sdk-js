@@ -17,7 +17,7 @@ To execute the sample codes below, you need to create an "application" (client) 
 ```js
 import { DAuth } from "dauth-sdk";
 
-const dAuth = new DAuth({
+const dAuth = await DAuth.init({
   clientID: "CLIENT_ID_OF_YOUR_APPLICATION",
 });
 ```

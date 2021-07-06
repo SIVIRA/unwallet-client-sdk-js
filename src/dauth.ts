@@ -20,17 +20,72 @@ configs.set("dev", {
 
 export class DAuth {
   private config: Config;
+  private ws: WebSocket;
+  private connectionID: string;
+  private resolve: (result: string) => void;
+  private reject: (reason: any) => void;
 
-  constructor(args: { clientID: string; env?: string }) {
-    if (!args.env) {
-      args.env = "prod";
-    }
-    if (!configs.has(args.env)) {
-      throw Error("invalid env");
-    }
+  constructor(config: Config, ws: WebSocket) {
+    this.config = config;
+    this.ws = ws;
+    this.connectionID = "";
+    this.resolve = (result: string) => {};
+    this.reject = (reason: any) => {};
+  }
 
-    this.config = configs.get(args.env)!;
-    this.config.clientID = args.clientID;
+  public static init(args: { clientID: string; env?: string }): Promise<DAuth> {
+    return new Promise((resolve, reject) => {
+      if (!args.env) {
+        args.env = "prod";
+      }
+      if (!configs.has(args.env)) {
+        throw Error("invalid env");
+      }
+
+      const config = configs.get(args.env)!;
+      config.clientID = args.clientID;
+
+      const dAuth = new DAuth(config, new WebSocket(config.dAuth.wsAPIURL));
+
+      dAuth.ws.onerror = (event) => {
+        reject("websocket connection failed");
+      };
+      dAuth.ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        switch (msg.type) {
+          case "connectionID":
+            dAuth.connectionID = msg.data.value;
+            resolve(dAuth);
+            break;
+
+          case "signature":
+            if (!!msg.data.value) {
+              dAuth.resolve(msg.data.value);
+            } else {
+              dAuth.reject("canceled");
+            }
+            dAuth.initPromiseArgs();
+            break;
+
+          case "presentation":
+            if (!!msg.data.value) {
+              dAuth.resolve(msg.data.value);
+            } else {
+              dAuth.reject("canceled");
+            }
+            dAuth.initPromiseArgs();
+            break;
+        }
+      };
+      dAuth.ws.onopen = (event) => {
+        dAuth.getConnectionID(dAuth.ws);
+      };
+    });
+  }
+
+  private initPromiseArgs(): void {
+    this.resolve = (result: string) => {};
+    this.reject = (reason: any) => {};
   }
 
   public authorize(args: {
@@ -55,33 +110,13 @@ export class DAuth {
 
   public sign(args: { message: string }): Promise<string> {
     return new Promise((resolve, reject) => {
-      const ws = new WebSocket(this.config.dAuth.wsAPIURL);
-      ws.onerror = (event) => {
-        reject("websocket connection failed");
-      };
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        switch (msg.type) {
-          case "connectionID":
-            const url = new URL(`${this.config.dAuth.baseURL}/x/sign`);
-            url.searchParams.set("connectionID", msg.data.value);
-            url.searchParams.set("message", args.message);
-            this.openWindow(url);
-            break;
+      this.resolve = resolve;
+      this.reject = reject;
 
-          case "signature":
-            ws.close();
-            if (!msg.data.value) {
-              reject("canceled");
-              break;
-            }
-            resolve(msg.data.value);
-            break;
-        }
-      };
-      ws.onopen = (event) => {
-        this.getConnectionID(ws);
-      };
+      const url = new URL(`${this.config.dAuth.baseURL}/x/sign`);
+      url.searchParams.set("connectionID", this.connectionID);
+      url.searchParams.set("message", args.message);
+      this.openWindow(url);
     });
   }
 
@@ -90,36 +125,14 @@ export class DAuth {
     challenge: string;
   }): Promise<string> {
     return new Promise((resolve, reject) => {
-      const ws = new WebSocket(this.config.dAuth.wsAPIURL);
-      ws.onerror = (event) => {
-        reject("websocket connection failed");
-      };
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        switch (msg.type) {
-          case "connectionID":
-            const url = new URL(
-              `${this.config.dAuth.baseURL}/x/createPresentation`
-            );
-            url.searchParams.set("connectionID", msg.data.value);
-            url.searchParams.set("credentialType", args.credentialType);
-            url.searchParams.set("challenge", args.challenge);
-            this.openWindow(url);
-            break;
+      this.resolve = resolve;
+      this.reject = reject;
 
-          case "presentation":
-            ws.close();
-            if (!msg.data.value) {
-              reject("canceled");
-              break;
-            }
-            resolve(msg.data.value);
-            break;
-        }
-      };
-      ws.onopen = (event) => {
-        this.getConnectionID(ws);
-      };
+      const url = new URL(`${this.config.dAuth.baseURL}/x/createPresentation`);
+      url.searchParams.set("connectionID", this.connectionID);
+      url.searchParams.set("credentialType", args.credentialType);
+      url.searchParams.set("challenge", args.challenge);
+      this.openWindow(url);
     });
   }
 

@@ -1,9 +1,16 @@
+import { Config } from "./config";
 export declare class DAuth {
     private config;
-    constructor(args: {
+    private ws;
+    private connectionID;
+    private resolve;
+    private reject;
+    constructor(config: Config, ws: WebSocket);
+    static init(args: {
         clientID: string;
         env?: string;
-    });
+    }): Promise<DAuth>;
+    private initPromiseArgs;
     authorize(args: {
         responseMode?: string;
         redirectURL: string;
