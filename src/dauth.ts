@@ -5,8 +5,8 @@ configs.set("prod", {
   clientID: "",
   dAuth: {
     baseURL: "https://id.dauth.world",
-    authURL: "https://auth.id.dauth.world/authorize",
-    wsAPIURL: "wss://ws-api.admin.id.dauth.world",
+    authURL: "https://id.dauth.world/authorize",
+    wsAPIURL: "wss://ws-api.admin.id-dev.dauth.world",
   },
 });
 configs.set("dev", {
@@ -101,7 +101,7 @@ export class DAuth {
     url.searchParams.set("response_type", "id_token");
     url.searchParams.set("response_mode", args.responseMode);
     url.searchParams.set("client_id", this.config.clientID);
-    url.searchParams.set("scope", "openid profile");
+    url.searchParams.set("scope", "openid");
     url.searchParams.set("redirect_uri", args.redirectURL);
     url.searchParams.set("nonce", args.nonce);
 
