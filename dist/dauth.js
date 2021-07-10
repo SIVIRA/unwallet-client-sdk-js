@@ -7,7 +7,7 @@ configs.set("prod", {
     dAuth: {
         baseURL: "https://id.dauth.world",
         authURL: "https://id.dauth.world/authorize",
-        wsAPIURL: "wss://ws-api.admin.id-dev.dauth.world",
+        wsAPIURL: "wss://ws-api.admin.id.dauth.world",
     },
 });
 configs.set("dev", {
