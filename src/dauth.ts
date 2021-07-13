@@ -121,7 +121,7 @@ export class DAuth {
   }
 
   public createPresentation(args: {
-    credentialType: string;
+    credential: string;
     challenge: string;
   }): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -130,7 +130,7 @@ export class DAuth {
 
       const url = new URL(`${this.config.dAuth.baseURL}/x/createPresentation`);
       url.searchParams.set("connectionID", this.connectionID);
-      url.searchParams.set("credentialType", args.credentialType);
+      url.searchParams.set("credential", args.credential);
       url.searchParams.set("challenge", args.challenge);
       this.openWindow(url);
     });

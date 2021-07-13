@@ -20,7 +20,7 @@ export declare class DAuth {
         message: string;
     }): Promise<string>;
     createPresentation(args: {
-        credentialType: string;
+        credential: string;
         challenge: string;
     }): Promise<string>;
     private getConnectionID;

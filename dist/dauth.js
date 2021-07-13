@@ -107,7 +107,7 @@ var DAuth = /** @class */ (function () {
             _this.reject = reject;
             var url = new URL(_this.config.dAuth.baseURL + "/x/createPresentation");
             url.searchParams.set("connectionID", _this.connectionID);
-            url.searchParams.set("credentialType", args.credentialType);
+            url.searchParams.set("credential", args.credential);
             url.searchParams.set("challenge", args.challenge);
             _this.openWindow(url);
         });
