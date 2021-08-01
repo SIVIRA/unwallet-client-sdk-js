@@ -14,7 +14,7 @@ configs.set("dev", {
     clientID: "",
     dAuth: {
         baseURL: "https://id-dev.dauth.world",
-        authURL: "https://auth.id-dev.dauth.world/authorize",
+        authURL: "https://id-dev.dauth.world/authorize",
         wsAPIURL: "wss://ws-api.admin.id-dev.dauth.world",
     },
 });
