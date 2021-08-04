@@ -1,4 +1,4 @@
-import { Config } from "./config";
+import { Config, MetaTransaction } from "./interfaces";
 
 const configs = new Map<string, Config>();
 configs.set("prod", {
@@ -22,14 +22,14 @@ export class DAuth {
   private config: Config;
   private ws: WebSocket;
   private connectionID: string;
-  private resolve: (result: string) => void;
+  private resolve: (result: any) => void;
   private reject: (reason: any) => void;
 
   constructor(config: Config, ws: WebSocket) {
     this.config = config;
     this.ws = ws;
     this.connectionID = "";
-    this.resolve = (result: string) => {};
+    this.resolve = (result: any) => {};
     this.reject = (reason: any) => {};
   }
 
@@ -59,6 +59,15 @@ export class DAuth {
             break;
 
           case "signature":
+            if (!!msg.data.value) {
+              dAuth.resolve(msg.data.value);
+            } else {
+              dAuth.reject("canceled");
+            }
+            dAuth.initPromiseArgs();
+            break;
+
+          case "metaTransaction":
             if (!!msg.data.value) {
               dAuth.resolve(msg.data.value);
             } else {
@@ -116,6 +125,24 @@ export class DAuth {
       const url = new URL(`${this.config.dAuth.baseURL}/x/sign`);
       url.searchParams.set("connectionID", this.connectionID);
       url.searchParams.set("message", args.message);
+      this.openWindow(url);
+    });
+  }
+
+  public signAssetTransfer(args: {
+    id: number;
+    to: string;
+    amount: number;
+  }): Promise<MetaTransaction> {
+    return new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+
+      const url = new URL(`${this.config.dAuth.baseURL}/x/signAssetTransfer`);
+      url.searchParams.set("connectionID", this.connectionID);
+      url.searchParams.set("id", args.id.toString());
+      url.searchParams.set("to", args.to);
+      url.searchParams.set("amount", args.amount.toString());
       this.openWindow(url);
     });
   }

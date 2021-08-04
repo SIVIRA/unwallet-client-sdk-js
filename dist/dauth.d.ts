@@ -1,4 +1,4 @@
-import { Config } from "./config";
+import { Config, MetaTransaction } from "./interfaces";
 export declare class DAuth {
     private config;
     private ws;
@@ -19,6 +19,11 @@ export declare class DAuth {
     sign(args: {
         message: string;
     }): Promise<string>;
+    signAssetTransfer(args: {
+        id: number;
+        to: string;
+        amount: number;
+    }): Promise<MetaTransaction>;
     createPresentation(args: {
         credential: string;
         challenge: string;
