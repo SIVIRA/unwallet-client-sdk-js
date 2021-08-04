@@ -6,3 +6,9 @@ export interface Config {
     wsAPIURL: string;
   };
 }
+
+export interface MetaTransaction {
+  executor: string;
+  data: string;
+  signature: string;
+}

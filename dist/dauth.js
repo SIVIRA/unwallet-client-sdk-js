@@ -56,6 +56,15 @@ var DAuth = /** @class */ (function () {
                         }
                         dAuth.initPromiseArgs();
                         break;
+                    case "metaTransaction":
+                        if (!!msg.data.value) {
+                            dAuth.resolve(msg.data.value);
+                        }
+                        else {
+                            dAuth.reject("canceled");
+                        }
+                        dAuth.initPromiseArgs();
+                        break;
                     case "presentation":
                         if (!!msg.data.value) {
                             dAuth.resolve(msg.data.value);
@@ -97,6 +106,19 @@ var DAuth = /** @class */ (function () {
             var url = new URL(_this.config.dAuth.baseURL + "/x/sign");
             url.searchParams.set("connectionID", _this.connectionID);
             url.searchParams.set("message", args.message);
+            _this.openWindow(url);
+        });
+    };
+    DAuth.prototype.signAssetTransfer = function (args) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.resolve = resolve;
+            _this.reject = reject;
+            var url = new URL(_this.config.dAuth.baseURL + "/x/signAssetTransfer");
+            url.searchParams.set("connectionID", _this.connectionID);
+            url.searchParams.set("id", args.id.toString());
+            url.searchParams.set("to", args.to);
+            url.searchParams.set("amount", args.amount.toString());
             _this.openWindow(url);
         });
     };
