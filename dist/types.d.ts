@@ -6,4 +6,9 @@ export interface Config {
         wsAPIURL: string;
     };
 }
-//# sourceMappingURL=config.d.ts.map
+export interface MetaTransaction {
+    executor: string;
+    data: string;
+    signature: string;
+}
+//# sourceMappingURL=types.d.ts.map

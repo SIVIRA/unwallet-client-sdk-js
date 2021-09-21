@@ -1,4 +1,4 @@
-import { Config, MetaTransaction } from "./interfaces";
+import { Config, MetaTransaction } from "./types";
 export declare class DAuth {
     private config;
     private ws;

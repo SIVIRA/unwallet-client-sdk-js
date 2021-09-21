@@ -1,4 +1,4 @@
-import { Config, MetaTransaction } from "./interfaces";
+import { Config, MetaTransaction } from "./types";
 
 const configs = new Map<string, Config>();
 configs.set("prod", {
