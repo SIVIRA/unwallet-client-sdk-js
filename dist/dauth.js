@@ -1,23 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DAuth = void 0;
-var configs = new Map();
-configs.set("prod", {
-    clientID: "",
-    dAuth: {
-        baseURL: "https://id.dauth.world",
-        authURL: "https://id.dauth.world/authorize",
-        wsAPIURL: "wss://ws-api.admin.id.dauth.world",
-    },
-});
-configs.set("dev", {
-    clientID: "",
-    dAuth: {
-        baseURL: "https://id-dev.dauth.world",
-        authURL: "https://id-dev.dauth.world/authorize",
-        wsAPIURL: "wss://ws-api.admin.id-dev.dauth.world",
-    },
-});
+var configs_1 = __importDefault(require("./configs"));
 var DAuth = /** @class */ (function () {
     function DAuth(config, ws) {
         this.config = config;
@@ -31,10 +18,10 @@ var DAuth = /** @class */ (function () {
             if (!args.env) {
                 args.env = "prod";
             }
-            if (!configs.has(args.env)) {
+            if (!configs_1.default.has(args.env)) {
                 throw Error("invalid env");
             }
-            var config = configs.get(args.env);
+            var config = configs_1.default.get(args.env);
             config.clientID = args.clientID;
             var dAuth = new DAuth(config, new WebSocket(config.dAuth.wsAPIURL));
             dAuth.ws.onerror = function (event) {
