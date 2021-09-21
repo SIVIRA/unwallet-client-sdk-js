@@ -18,10 +18,10 @@ var DAuth = /** @class */ (function () {
             if (!args.env) {
                 args.env = "prod";
             }
-            if (!configs_1.default.has(args.env)) {
+            if (!(args.env in configs_1.default)) {
                 throw Error("invalid env");
             }
-            var config = configs_1.default.get(args.env);
+            var config = configs_1.default[args.env];
             config.clientID = args.clientID;
             var dAuth = new DAuth(config, new WebSocket(config.dAuth.wsAPIURL));
             dAuth.ws.onerror = function (event) {

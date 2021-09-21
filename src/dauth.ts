@@ -21,11 +21,11 @@ export class DAuth {
       if (!args.env) {
         args.env = "prod";
       }
-      if (!configs.has(args.env)) {
+      if (!(args.env in configs)) {
         throw Error("invalid env");
       }
 
-      const config = configs.get(args.env)!;
+      const config = configs[args.env];
       config.clientID = args.clientID;
 
       const dAuth = new DAuth(config, new WebSocket(config.dAuth.wsAPIURL));
