@@ -40,39 +40,12 @@ export class DAuth {
       };
       dAuth.ws.onmessage = (event) => {
         const msg = JSON.parse(event.data);
-        switch (msg.type) {
-          case "connectionID":
-            dAuth.connectionID = msg.data.value;
-            resolve(dAuth);
-            break;
-
-          case "signature":
-            if (!!msg.data.value) {
-              dAuth.resolve(msg.data.value);
-            } else {
-              dAuth.reject("canceled");
-            }
-            dAuth.initPromiseArgs();
-            break;
-
-          case "metaTransaction":
-            if (!!msg.data.value) {
-              dAuth.resolve(msg.data.value);
-            } else {
-              dAuth.reject("canceled");
-            }
-            dAuth.initPromiseArgs();
-            break;
-
-          case "presentation":
-            if (!!msg.data.value) {
-              dAuth.resolve(msg.data.value);
-            } else {
-              dAuth.reject("canceled");
-            }
-            dAuth.initPromiseArgs();
-            break;
+        if (msg.type === "connectionID") {
+          dAuth.connectionID = msg.data.value;
+          resolve(dAuth);
+          return;
         }
+        dAuth.handleWSMessage(msg);
       };
     });
   }
@@ -154,8 +127,23 @@ export class DAuth {
     });
   }
 
-  private sendWSMessage(message: any): void {
-    this.ws.send(JSON.stringify(message));
+  private sendWSMessage(msg: any): void {
+    this.ws.send(JSON.stringify(msg));
+  }
+
+  private handleWSMessage(msg: any): void {
+    switch (msg.type) {
+      case "signature":
+      case "metaTransaction":
+      case "presentation":
+        if (msg.data.value === null) {
+          this.reject("canceled");
+        } else {
+          this.resolve(msg.data.value);
+        }
+        this.initPromiseArgs();
+        break;
+    }
   }
 
   private openWindow(url: URL): void {

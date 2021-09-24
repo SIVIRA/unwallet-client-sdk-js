@@ -32,39 +32,12 @@ class DAuth {
             };
             dAuth.ws.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
-                switch (msg.type) {
-                    case "connectionID":
-                        dAuth.connectionID = msg.data.value;
-                        resolve(dAuth);
-                        break;
-                    case "signature":
-                        if (!!msg.data.value) {
-                            dAuth.resolve(msg.data.value);
-                        }
-                        else {
-                            dAuth.reject("canceled");
-                        }
-                        dAuth.initPromiseArgs();
-                        break;
-                    case "metaTransaction":
-                        if (!!msg.data.value) {
-                            dAuth.resolve(msg.data.value);
-                        }
-                        else {
-                            dAuth.reject("canceled");
-                        }
-                        dAuth.initPromiseArgs();
-                        break;
-                    case "presentation":
-                        if (!!msg.data.value) {
-                            dAuth.resolve(msg.data.value);
-                        }
-                        else {
-                            dAuth.reject("canceled");
-                        }
-                        dAuth.initPromiseArgs();
-                        break;
+                if (msg.type === "connectionID") {
+                    dAuth.connectionID = msg.data.value;
+                    resolve(dAuth);
+                    return;
                 }
+                dAuth.handleWSMessage(msg);
             };
         });
     }
@@ -123,8 +96,23 @@ class DAuth {
             action: "getConnectionID",
         });
     }
-    sendWSMessage(message) {
-        this.ws.send(JSON.stringify(message));
+    sendWSMessage(msg) {
+        this.ws.send(JSON.stringify(msg));
+    }
+    handleWSMessage(msg) {
+        switch (msg.type) {
+            case "signature":
+            case "metaTransaction":
+            case "presentation":
+                if (msg.data.value === null) {
+                    this.reject("canceled");
+                }
+                else {
+                    this.resolve(msg.data.value);
+                }
+                this.initPromiseArgs();
+                break;
+        }
     }
     openWindow(url) {
         const width = 480;
