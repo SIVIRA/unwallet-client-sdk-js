@@ -3,8 +3,10 @@ import { Config, MetaTransaction } from "./types";
 
 export class DAuth {
   private config: Config;
+
   private ws: WebSocket;
   private connectionID: string;
+
   private resolve: (result: any) => void;
   private reject: (reason: any) => void;
 
