@@ -115,10 +115,10 @@ class DAuth {
         }
     }
     openWindow(url) {
-        const width = 480;
-        const height = 480;
-        const left = (screen.width - width) / 2;
-        const top = (screen.height - height) / 2;
+        const width = screen.width / 2;
+        const height = screen.height;
+        const left = screen.width / 4;
+        const top = 0;
         window.open(url.toString(), "_blank", `width=${width},height=${height},left=${left},top=${top}`);
     }
 }
