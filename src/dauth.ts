@@ -35,6 +35,9 @@ export class DAuth {
       dAuth.ws.onerror = (event) => {
         reject("websocket connection failed");
       };
+      dAuth.ws.onopen = (event) => {
+        dAuth.getConnectionID(dAuth.ws);
+      };
       dAuth.ws.onmessage = (event) => {
         const msg = JSON.parse(event.data);
         switch (msg.type) {
@@ -70,9 +73,6 @@ export class DAuth {
             dAuth.initPromiseArgs();
             break;
         }
-      };
-      dAuth.ws.onopen = (event) => {
-        dAuth.getConnectionID(dAuth.ws);
       };
     });
   }
