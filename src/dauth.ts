@@ -36,7 +36,7 @@ export class DAuth {
         reject("websocket connection failed");
       };
       dAuth.ws.onopen = (event) => {
-        dAuth.getConnectionID(dAuth.ws);
+        dAuth.getConnectionID();
       };
       dAuth.ws.onmessage = (event) => {
         const msg = JSON.parse(event.data);
@@ -148,14 +148,14 @@ export class DAuth {
     });
   }
 
-  private getConnectionID(ws: WebSocket): void {
-    this.sendWSMessage(ws, {
+  private getConnectionID(): void {
+    this.sendWSMessage({
       action: "getConnectionID",
     });
   }
 
-  private sendWSMessage(ws: WebSocket, message: any): void {
-    ws.send(JSON.stringify(message));
+  private sendWSMessage(message: any): void {
+    this.ws.send(JSON.stringify(message));
   }
 
   private openWindow(url: URL): void {
