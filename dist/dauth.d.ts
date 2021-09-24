@@ -30,6 +30,7 @@ export declare class DAuth {
     }): Promise<string>;
     private getConnectionID;
     private sendWSMessage;
+    private handleWSMessage;
     private openWindow;
 }
 //# sourceMappingURL=dauth.d.ts.map
