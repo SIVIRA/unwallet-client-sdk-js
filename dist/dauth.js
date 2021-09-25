@@ -1,36 +1,33 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DAuth = void 0;
-const configs_1 = __importDefault(require("./configs"));
+const configs_1 = require("./configs");
 class DAuth {
-    constructor(config, ws) {
+    constructor(config, dAuthConfig, ws) {
         this.config = config;
+        this.dAuthConfig = dAuthConfig;
         this.ws = ws;
         this.connectionID = "";
         this.resolve = (result) => { };
         this.reject = (reason) => { };
     }
-    static init(args) {
+    static init(config) {
         return new Promise((resolve, reject) => {
-            if (!args.env) {
-                args.env = "prod";
+            if (!config.env) {
+                config.env = "prod";
             }
-            if (!(args.env in configs_1.default)) {
+            if (!(config.env in configs_1.dAuthConfigs)) {
                 throw Error("invalid env");
             }
-            const config = configs_1.default[args.env];
-            config.clientID = args.clientID;
-            const dAuth = new DAuth(config, new WebSocket(config.dAuth.wsAPIURL));
-            dAuth.ws.onerror = (event) => {
+            const dAuthConfig = configs_1.dAuthConfigs[config.env];
+            const ws = new WebSocket(dAuthConfig.wsAPIURL);
+            ws.onerror = (event) => {
                 reject("websocket connection failed");
             };
-            dAuth.ws.onopen = (event) => {
+            ws.onopen = (event) => {
                 dAuth.getConnectionID();
             };
-            dAuth.ws.onmessage = (event) => {
+            ws.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
                 if (msg.type === "connectionID") {
                     dAuth.connectionID = msg.data.value;
@@ -39,6 +36,8 @@ class DAuth {
                 }
                 dAuth.handleWSMessage(msg);
             };
+            const dAuth = new DAuth(config, dAuthConfig, ws);
+            resolve(dAuth);
         });
     }
     initPromiseArgs() {
@@ -49,7 +48,7 @@ class DAuth {
         if (!args.responseMode) {
             args.responseMode = "fragment";
         }
-        const url = new URL(this.config.dAuth.authURL);
+        const url = new URL(this.dAuthConfig.authURL);
         url.searchParams.set("response_type", "id_token");
         url.searchParams.set("response_mode", args.responseMode);
         url.searchParams.set("client_id", this.config.clientID);
@@ -62,7 +61,7 @@ class DAuth {
         return new Promise((resolve, reject) => {
             this.resolve = resolve;
             this.reject = reject;
-            const url = new URL(`${this.config.dAuth.baseURL}/x/sign`);
+            const url = new URL(`${this.dAuthConfig.baseURL}/x/sign`);
             url.searchParams.set("connectionID", this.connectionID);
             url.searchParams.set("message", args.message);
             this.openWindow(url);
@@ -72,7 +71,7 @@ class DAuth {
         return new Promise((resolve, reject) => {
             this.resolve = resolve;
             this.reject = reject;
-            const url = new URL(`${this.config.dAuth.baseURL}/x/signAssetTransfer`);
+            const url = new URL(`${this.dAuthConfig.baseURL}/x/signAssetTransfer`);
             url.searchParams.set("connectionID", this.connectionID);
             url.searchParams.set("id", args.id.toString());
             url.searchParams.set("to", args.to);
@@ -84,7 +83,7 @@ class DAuth {
         return new Promise((resolve, reject) => {
             this.resolve = resolve;
             this.reject = reject;
-            const url = new URL(`${this.config.dAuth.baseURL}/x/createPresentation`);
+            const url = new URL(`${this.dAuthConfig.baseURL}/x/createPresentation`);
             url.searchParams.set("connectionID", this.connectionID);
             url.searchParams.set("credential", args.credential);
             url.searchParams.set("challenge", args.challenge);

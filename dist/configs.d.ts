@@ -1,6 +1,5 @@
-import { Config } from "./types";
-declare const configs: {
-    [env: string]: Config;
+import { DAuthConfig } from "./types";
+export declare const dAuthConfigs: {
+    [env: string]: DAuthConfig;
 };
-export default configs;
 //# sourceMappingURL=configs.d.ts.map
