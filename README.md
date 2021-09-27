@@ -2,6 +2,8 @@
 
 dAuth SDK for JavaScript
 
+:warning: Currently dauth-sdk-js works fine only on browsers
+
 ## Installation
 
 ```sh
