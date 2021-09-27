@@ -1,10 +1,12 @@
 export interface Config {
   clientID: string;
-  dAuth: {
-    baseURL: string;
-    authURL: string;
-    wsAPIURL: string;
-  };
+  env?: string;
+}
+
+export interface DAuthConfig {
+  baseURL: string;
+  authURL: string;
+  wsAPIURL: string;
 }
 
 export interface MetaTransaction {

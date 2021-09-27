@@ -1,15 +1,13 @@
-import { Config, MetaTransaction } from "./types";
+import { Config, DAuthConfig, MetaTransaction } from "./types";
 export declare class DAuth {
     private config;
+    private dAuthConfig;
     private ws;
     private connectionID;
     private resolve;
     private reject;
-    constructor(config: Config, ws: WebSocket);
-    static init(args: {
-        clientID: string;
-        env?: string;
-    }): Promise<DAuth>;
+    constructor(config: Config, dAuthConfig: DAuthConfig, ws: WebSocket);
+    static init(config: Config): Promise<DAuth>;
     private initPromiseArgs;
     authorize(args: {
         responseMode?: string;
