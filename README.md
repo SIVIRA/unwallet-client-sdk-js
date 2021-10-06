@@ -1,13 +1,13 @@
-# dauth-sdk-js
+# dauth-client-sdk-js
 
-dAuth SDK for JavaScript
+dAuth client-side SDK for JavaScript
 
-:warning: Currently dauth-sdk-js works fine only on browsers
+:warning:dauth-client-sdk-js works fine only on browsers
 
 ## Installation
 
 ```sh
-$ npm i SIVIRA/dauth-sdk-js
+$ npm i dauth-client-sdk
 ```
 
 ## Example
@@ -17,7 +17,7 @@ To execute the sample codes below, you need to create an application with dAuth 
 ### Initialization
 
 ```js
-import { DAuth } from "dauth-sdk";
+import { DAuth } from "dauth-client-sdk";
 
 const dAuth = await DAuth.init({
   clientID: "CLIENT_ID_OF_YOUR_APPLICATION",
