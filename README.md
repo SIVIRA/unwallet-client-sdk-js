@@ -2,7 +2,7 @@
 
 dAuth client-side SDK for JavaScript
 
-:warning:dauth-client-sdk-js works fine only on browsers
+:warning: dauth-client-sdk-js works fine only on browsers
 
 ## Installation
 
@@ -33,10 +33,22 @@ dAuth.authorize({
 });
 ```
 
-### Requesting a signature for an message
+### Requesting a signature for a message
 
 ```js
 const sig = await dAuth.sign({
   message: "ARBITRARY_MESSAGE",
 });
 ```
+
+### Requesting a signature for a token transfer transaction
+
+```js
+const metaTx = await dAuth.signAssetTransfer({
+  id: 1, // token ID
+  to: "0x0000000000000000000000000000000000000000" // destination address
+  amount: 1, // token amount
+});
+```
+
+To execute the transaction, call [POST /metaTransactions of dAuth API](https://developers.dauth.world/ja/latest/dauth-api.html#post-metatransactions).
