@@ -1,9 +1,14 @@
 {
-  "author": "SIVIRA",
-  "name": "dauth-sdk",
-  "description": "dAuth SDK for JavaScript",
+  "name": "dauth-client-sdk",
   "version": "0.1.0",
+  "description": "dAuth client-side SDK for JavaScript",
+  "license": "MIT",
+  "author": "SIVIRA",
   "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/SIVIRA/dauth-client-sdk-js.git"
+  },
   "scripts": {
     "build": "tsc"
   },
