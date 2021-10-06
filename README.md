@@ -44,7 +44,7 @@ const sig = await dAuth.sign({
 ### Requesting a signature for a token transfer transaction
 
 ```js
-const metaTx = await dAuth.signAssetTransfer({
+const metaTx = await dAuth.signTokenTransfer({
   id: 1, // token ID
   to: "0x0000000000000000000000000000000000000000" // destination address
   amount: 1, // token amount

@@ -91,7 +91,7 @@ export class DAuth {
     });
   }
 
-  public signAssetTransfer(args: {
+  public signTokenTransfer(args: {
     id: number;
     to: string;
     amount: number;
@@ -100,7 +100,7 @@ export class DAuth {
       this.resolve = resolve;
       this.reject = reject;
 
-      const url = new URL(`${this.dAuthConfig.baseURL}/x/signAssetTransfer`);
+      const url = new URL(`${this.dAuthConfig.baseURL}/x/signTokenTransfer`);
       url.searchParams.set("connectionID", this.connectionID);
       url.searchParams.set("id", args.id.toString());
       url.searchParams.set("to", args.to);
