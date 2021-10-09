@@ -14,15 +14,17 @@ export class DAuth {
   constructor(config: Config, dAuthConfig: DAuthConfig, ws: WebSocket) {
     this.config = config;
     this.dAuthConfig = dAuthConfig;
+
     this.ws = ws;
     this.connectionID = "";
+
     this.resolve = (result: any) => {};
     this.reject = (reason: any) => {};
   }
 
   public static init(config: Config): Promise<DAuth> {
     return new Promise((resolve, reject) => {
-      if (!config.env) {
+      if (config.env === undefined) {
         config.env = "prod";
       }
       if (!(config.env in dAuthConfigs)) {
