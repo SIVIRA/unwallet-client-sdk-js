@@ -1,6 +1,6 @@
 {
   "name": "dauth-client-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "dAuth client-side SDK for JavaScript",
   "license": "MIT",
   "author": "SIVIRA",
