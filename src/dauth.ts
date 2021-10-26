@@ -8,8 +8,8 @@ export class DAuth {
   private ws: WebSocket;
   private connectionID: string;
 
-  private resolve: (result: any) => void;
-  private reject: (reason: any) => void;
+  private resolve: ((result: any) => void) | null = null;
+  private reject: ((reason: any) => void) | null = null;
 
   constructor(config: Config, dAuthConfig: DAuthConfig, ws: WebSocket) {
     this.config = config;
@@ -18,6 +18,10 @@ export class DAuth {
     this.ws = ws;
     this.connectionID = "";
 
+    this.initPromiseArgs();
+  }
+
+  private initPromiseArgs(): void {
     this.resolve = (result: any) => {};
     this.reject = (reason: any) => {};
   }
@@ -53,11 +57,6 @@ export class DAuth {
       // should be run after ws setup
       const dAuth = new DAuth(config, dAuthConfig, ws);
     });
-  }
-
-  private initPromiseArgs(): void {
-    this.resolve = (result: string) => {};
-    this.reject = (reason: any) => {};
   }
 
   public authorize(args: {
@@ -142,9 +141,9 @@ export class DAuth {
       case "metaTransaction":
       case "presentation":
         if (msg.data.value === null) {
-          this.reject("canceled");
+          this.reject!("canceled");
         } else {
-          this.resolve(msg.data.value);
+          this.resolve!(msg.data.value);
         }
         this.initPromiseArgs();
         break;
