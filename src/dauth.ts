@@ -34,6 +34,8 @@ export class DAuth {
       const dAuthConfig = dAuthConfigs[config.env];
 
       const ws = new WebSocket(dAuthConfig.wsAPIURL);
+      const dAuth = new DAuth(config, dAuthConfig, ws);
+
       ws.onerror = (event) => {
         reject("websocket connection failed");
       };
@@ -49,10 +51,6 @@ export class DAuth {
         }
         dAuth.handleWSMessage(msg);
       };
-
-      const dAuth = new DAuth(config, dAuthConfig, ws);
-
-      resolve(dAuth);
     });
   }
 
