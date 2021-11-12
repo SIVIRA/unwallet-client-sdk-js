@@ -3,7 +3,7 @@ export interface Config {
   env?: string;
 }
 
-export interface DAuthConfig {
+export interface UnWalletConfig {
   baseURL: string;
   authURL: string;
   wsAPIURL: string;

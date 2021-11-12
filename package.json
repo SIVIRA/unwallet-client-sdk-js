@@ -1,13 +1,13 @@
 {
-  "name": "dauth-client-sdk",
-  "version": "0.1.3",
-  "description": "dAuth client-side SDK for JavaScript",
+  "name": "unwallet-client-sdk",
+  "version": "0.1.0",
+  "description": "unWallet client-side SDK for JavaScript",
   "license": "MIT",
   "author": "SIVIRA",
   "main": "dist/index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/SIVIRA/dauth-client-sdk-js.git"
+    "url": "git://github.com/SIVIRA/unwallet-client-sdk-js.git"
   },
   "scripts": {
     "build": "tsc"
