@@ -3,7 +3,7 @@ import { Config, UnWalletConfig, MetaTransaction } from "./types";
 
 export class UnWallet {
   private config: Config;
-  private dAuthConfig: UnWalletConfig;
+  private unWalletConfig: UnWalletConfig;
 
   private ws: WebSocket;
   private connectionID: string;
@@ -11,9 +11,9 @@ export class UnWallet {
   private resolve: ((result: any) => void) | null = null;
   private reject: ((reason: any) => void) | null = null;
 
-  constructor(config: Config, dAuthConfig: UnWalletConfig, ws: WebSocket) {
+  constructor(config: Config, unWalletConfig: UnWalletConfig, ws: WebSocket) {
     this.config = config;
-    this.dAuthConfig = dAuthConfig;
+    this.unWalletConfig = unWalletConfig;
 
     this.ws = ws;
     this.connectionID = "";
@@ -35,27 +35,27 @@ export class UnWallet {
         throw Error("invalid env");
       }
 
-      const dAuthConfig = unWalletConfigs[config.env];
+      const unWalletConfig = unWalletConfigs[config.env];
 
-      const ws = new WebSocket(dAuthConfig.wsAPIURL);
+      const ws = new WebSocket(unWalletConfig.wsAPIURL);
       ws.onerror = (event) => {
         reject("websocket connection failed");
       };
       ws.onopen = (event) => {
-        dAuth.getConnectionID();
+        unWallet.getConnectionID();
       };
       ws.onmessage = (event) => {
         const msg = JSON.parse(event.data);
         if (msg.type === "connectionID") {
-          dAuth.connectionID = msg.data.value;
-          resolve(dAuth);
+          unWallet.connectionID = msg.data.value;
+          resolve(unWallet);
           return;
         }
-        dAuth.handleWSMessage(msg);
+        unWallet.handleWSMessage(msg);
       };
 
       // should be run after ws setup
-      const dAuth = new UnWallet(config, dAuthConfig, ws);
+      const unWallet = new UnWallet(config, unWalletConfig, ws);
     });
   }
 
@@ -68,7 +68,7 @@ export class UnWallet {
       args.responseMode = "fragment";
     }
 
-    const url = new URL(this.dAuthConfig.authURL);
+    const url = new URL(this.unWalletConfig.authURL);
     url.searchParams.set("response_type", "id_token");
     url.searchParams.set("response_mode", args.responseMode);
     url.searchParams.set("client_id", this.config.clientID);
@@ -84,7 +84,7 @@ export class UnWallet {
       this.resolve = resolve;
       this.reject = reject;
 
-      const url = new URL(`${this.dAuthConfig.baseURL}/x/sign`);
+      const url = new URL(`${this.unWalletConfig.baseURL}/x/sign`);
       url.searchParams.set("connectionID", this.connectionID);
       url.searchParams.set("message", args.message);
       this.openWindow(url);
@@ -100,7 +100,7 @@ export class UnWallet {
       this.resolve = resolve;
       this.reject = reject;
 
-      const url = new URL(`${this.dAuthConfig.baseURL}/x/signTokenTransfer`);
+      const url = new URL(`${this.unWalletConfig.baseURL}/x/signTokenTransfer`);
       url.searchParams.set("connectionID", this.connectionID);
       url.searchParams.set("id", args.id.toString());
       url.searchParams.set("to", args.to);
@@ -117,7 +117,9 @@ export class UnWallet {
       this.resolve = resolve;
       this.reject = reject;
 
-      const url = new URL(`${this.dAuthConfig.baseURL}/x/createPresentation`);
+      const url = new URL(
+        `${this.unWalletConfig.baseURL}/x/createPresentation`
+      );
       url.searchParams.set("connectionID", this.connectionID);
       url.searchParams.set("credential", args.credential);
       url.searchParams.set("challenge", args.challenge);
