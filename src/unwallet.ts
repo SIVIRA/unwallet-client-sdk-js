@@ -1,9 +1,9 @@
-import { dAuthConfigs } from "./configs";
-import { Config, DAuthConfig, MetaTransaction } from "./types";
+import { unWalletConfigs } from "./configs";
+import { Config, UnWalletConfig, MetaTransaction } from "./types";
 
-export class DAuth {
+export class UnWallet {
   private config: Config;
-  private dAuthConfig: DAuthConfig;
+  private dAuthConfig: UnWalletConfig;
 
   private ws: WebSocket;
   private connectionID: string;
@@ -11,7 +11,7 @@ export class DAuth {
   private resolve: ((result: any) => void) | null = null;
   private reject: ((reason: any) => void) | null = null;
 
-  constructor(config: Config, dAuthConfig: DAuthConfig, ws: WebSocket) {
+  constructor(config: Config, dAuthConfig: UnWalletConfig, ws: WebSocket) {
     this.config = config;
     this.dAuthConfig = dAuthConfig;
 
@@ -26,16 +26,16 @@ export class DAuth {
     this.reject = (reason: any) => {};
   }
 
-  public static init(config: Config): Promise<DAuth> {
+  public static init(config: Config): Promise<UnWallet> {
     return new Promise((resolve, reject) => {
       if (config.env === undefined) {
         config.env = "prod";
       }
-      if (!(config.env in dAuthConfigs)) {
+      if (!(config.env in unWalletConfigs)) {
         throw Error("invalid env");
       }
 
-      const dAuthConfig = dAuthConfigs[config.env];
+      const dAuthConfig = unWalletConfigs[config.env];
 
       const ws = new WebSocket(dAuthConfig.wsAPIURL);
       ws.onerror = (event) => {
@@ -55,7 +55,7 @@ export class DAuth {
       };
 
       // should be run after ws setup
-      const dAuth = new DAuth(config, dAuthConfig, ws);
+      const dAuth = new UnWallet(config, dAuthConfig, ws);
     });
   }
 

@@ -1,14 +1,14 @@
-import { DAuthConfig } from "./types";
+import { UnWalletConfig } from "./types";
 
-export const dAuthConfigs: { [env: string]: DAuthConfig } = {
+export const unWalletConfigs: { [env: string]: UnWalletConfig } = {
   prod: {
-    baseURL: "https://id.dauth.world",
-    authURL: "https://id.dauth.world/authorize",
+    baseURL: "https://id.unwallet.world",
+    authURL: "https://id.unwallet.world/authorize",
     wsAPIURL: "wss://ws-api.admin.id.dauth.world",
   },
   dev: {
-    baseURL: "https://id-dev.dauth.world",
-    authURL: "https://id-dev.dauth.world/authorize",
+    baseURL: "https://id.unwallet.dev",
+    authURL: "https://id.unwallet.dev/authorize",
     wsAPIURL: "wss://ws-api.admin.id-dev.dauth.world",
   },
   local: {
