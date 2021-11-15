@@ -1,6 +1,4 @@
-# unwallet-client-sdk-js
-
-unWallet client-side SDK for JavaScript
+# unWallet client-side SDK for JavaScript
 
 :warning: unwallet-client-sdk-js works fine only on browsers
 
