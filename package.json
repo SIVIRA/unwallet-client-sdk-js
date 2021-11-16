@@ -1,7 +1,7 @@
 {
   "name": "unwallet-client-sdk",
-  "version": "0.1.0",
-  "description": "unWallet client-side SDK for JavaScript",
+  "version": "0.1.1",
+  "description": "unWallet client-side SDK",
   "license": "MIT",
   "author": "SIVIRA",
   "main": "dist/index.js",
