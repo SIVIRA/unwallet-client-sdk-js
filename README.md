@@ -49,4 +49,4 @@ const metaTx = await unWallet.signTokenTransfer({
 });
 ```
 
-To execute the transaction, call [POST /metaTransactions of unWallet API](https://developers.dauth.world/ja/latest/unwallet-api.html#post-metatransactions).
+To execute the transaction, call [POST /metaTransactions of unWallet Enterprise API](https://developers.ent.unwallet.world/ja/latest/unwallet-ent-api.html#post-metatransactions).
