@@ -5,7 +5,7 @@
 ## Installation
 
 ```sh
-$ npm i unwallet-client-sdk
+$ npm install unwallet-client-sdk
 ```
 
 ## Example
