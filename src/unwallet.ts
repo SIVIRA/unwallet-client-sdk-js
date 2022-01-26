@@ -86,6 +86,7 @@ export class UnWallet {
 
       const url = new URL(`${this.unWalletConfig.baseURL}/x/sign`);
       url.searchParams.set("connectionID", this.connectionID);
+      url.searchParams.set("clientID", this.config.clientID);
       url.searchParams.set("message", args.message);
       this.openWindow(url);
     });
@@ -102,6 +103,7 @@ export class UnWallet {
 
       const url = new URL(`${this.unWalletConfig.baseURL}/x/signTokenTransfer`);
       url.searchParams.set("connectionID", this.connectionID);
+      url.searchParams.set("clientID", this.config.clientID);
       url.searchParams.set("id", args.id.toString());
       url.searchParams.set("to", args.to);
       url.searchParams.set("amount", args.amount.toString());
@@ -121,6 +123,7 @@ export class UnWallet {
         `${this.unWalletConfig.baseURL}/x/createPresentation`
       );
       url.searchParams.set("connectionID", this.connectionID);
+      url.searchParams.set("clientID", this.config.clientID);
       url.searchParams.set("credential", args.credential);
       url.searchParams.set("challenge", args.challenge);
       this.openWindow(url);
