@@ -47,7 +47,7 @@ export class UnWallet {
       ws.onmessage = (event) => {
         const msg = JSON.parse(event.data);
         if (msg.type === "connectionID") {
-          unWallet.connectionID = msg.data.value;
+          unWallet.connectionID = msg.value;
           resolve(unWallet);
           return;
         }
@@ -143,16 +143,32 @@ export class UnWallet {
   private handleWSMessage(msg: any): void {
     switch (msg.type) {
       case "signature":
-      case "metaTransaction":
-      case "presentation":
-        if (msg.data.value === null) {
-          this.reject!("canceled");
-        } else {
-          this.resolve!(msg.data.value);
-        }
-        this.initPromiseArgs();
+        this.resolve!(msg.value);
         break;
+
+      case "metaTransaction":
+        this.resolve!(msg.value);
+        break;
+
+      case "presentation":
+        this.resolve!(msg.value);
+        break;
+
+      case "error":
+        switch (msg.value) {
+          case "rejected":
+            this.reject!("canceled");
+            break;
+
+          default:
+            throw new Error(msg.value);
+        }
+
+      default:
+        throw new Error(`unknown message type: ${msg.type}`);
     }
+
+    this.initPromiseArgs();
   }
 
   private openWindow(url: URL): void {
