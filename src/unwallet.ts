@@ -88,6 +88,29 @@ export class UnWallet {
       url.searchParams.set("connectionID", this.connectionID);
       url.searchParams.set("clientID", this.config.clientID);
       url.searchParams.set("message", args.message);
+
+      this.openWindow(url);
+    });
+  }
+
+  public signTransaction(args: {
+    to: string;
+    value?: string;
+    data?: string;
+  }): Promise<MetaTransaction> {
+    return new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+
+      const url = new URL(`${this.unWalletConfig.baseURL}/x/signTransaction`);
+      url.searchParams.set("connectionID", this.connectionID);
+      url.searchParams.set("clientID", this.config.clientID);
+      url.searchParams.set("transaction", JSON.stringify(args));
+      url.searchParams.set(
+        "relayer",
+        "0x0000000000000000000000000000000000000000"
+      );
+
       this.openWindow(url);
     });
   }
@@ -107,6 +130,7 @@ export class UnWallet {
       url.searchParams.set("id", args.id.toString());
       url.searchParams.set("to", args.to);
       url.searchParams.set("amount", args.amount.toString());
+
       this.openWindow(url);
     });
   }
@@ -126,6 +150,7 @@ export class UnWallet {
       url.searchParams.set("clientID", this.config.clientID);
       url.searchParams.set("credential", args.credential);
       url.searchParams.set("challenge", args.challenge);
+
       this.openWindow(url);
     });
   }
