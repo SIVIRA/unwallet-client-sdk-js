@@ -188,6 +188,7 @@ export class UnWallet {
           default:
             throw new Error(msg.value);
         }
+        break;
 
       default:
         throw new Error(`unknown message type: ${msg.type}`);
