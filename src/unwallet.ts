@@ -118,10 +118,6 @@ export class UnWallet {
       url.searchParams.set("connectionID", this.connectionID);
       url.searchParams.set("clientID", this.config.clientID);
       url.searchParams.set("transaction", JSON.stringify(args));
-      url.searchParams.set(
-        "relayer",
-        "0x0000000000000000000000000000000000000000"
-      );
 
       this.openWindow(url);
     });
