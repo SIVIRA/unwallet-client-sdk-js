@@ -33,6 +33,56 @@ const sig = await unWallet.sign({
 }
 ```
 
+### How to verify a signature
+
+See also [ERC1271](https://eips.ethereum.org/EIPS/eip-1271).
+
+```js
+const ethers = require("ethers");
+
+(async () => {
+  const contract = new ethers.Contract(
+    "<CONTRACT_WALLET_ADDRESS>",
+    [
+      {
+        inputs: [
+          {
+            internalType: "bytes32",
+            name: "hash",
+            type: "bytes32",
+          },
+          {
+            internalType: "bytes",
+            name: "signature",
+            type: "bytes",
+          },
+        ],
+        name: "isValidSignature",
+        outputs: [
+          {
+            internalType: "bytes4",
+            name: "",
+            type: "bytes4",
+          },
+        ],
+        stateMutability: "view",
+        type: "function",
+      },
+    ],
+    new ethers.providers.JsonRpcProvider("<YOUR_RPC_URL>")
+  );
+
+  try {
+    await contract.isValidSignature("<DIGEST>", "<SIGNATURE>");
+  } catch (e) {
+    console.log("invalid");
+    return;
+  }
+
+  console.log("valid");
+})();
+```
+
 ## signTokenTransfer
 
 `signTokenTransfer` requests a signature for a token transfer transaction.
