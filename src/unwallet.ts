@@ -1,5 +1,12 @@
+import { ethers } from "ethers";
+
 import { unWalletConfigs } from "./configs";
-import { Config, UnWalletConfig, MetaTransaction } from "./types";
+import {
+  Config,
+  UnWalletConfig,
+  DigestAndSignature,
+  MetaTransaction,
+} from "./types";
 
 export class UnWallet {
   private config: Config;
@@ -79,15 +86,39 @@ export class UnWallet {
     location.assign(url.toString());
   }
 
-  public sign(args: { message: string }): Promise<string> {
+  public sign(args: { message: string }): Promise<DigestAndSignature> {
     return new Promise((resolve, reject) => {
-      this.resolve = resolve;
+      this.resolve = (sig: string) => {
+        resolve({
+          digest: ethers.utils.sha256(ethers.utils.toUtf8Bytes(args.message)),
+          signature: sig,
+        });
+      };
       this.reject = reject;
 
       const url = new URL(`${this.unWalletConfig.baseURL}/x/sign`);
       url.searchParams.set("connectionID", this.connectionID);
       url.searchParams.set("clientID", this.config.clientID);
       url.searchParams.set("message", args.message);
+
+      this.openWindow(url);
+    });
+  }
+
+  public signTransaction(args: {
+    to: string;
+    value?: string;
+    data?: string;
+  }): Promise<MetaTransaction> {
+    return new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+
+      const url = new URL(`${this.unWalletConfig.baseURL}/x/signTransaction`);
+      url.searchParams.set("connectionID", this.connectionID);
+      url.searchParams.set("clientID", this.config.clientID);
+      url.searchParams.set("transaction", JSON.stringify(args));
+
       this.openWindow(url);
     });
   }
@@ -107,6 +138,7 @@ export class UnWallet {
       url.searchParams.set("id", args.id.toString());
       url.searchParams.set("to", args.to);
       url.searchParams.set("amount", args.amount.toString());
+
       this.openWindow(url);
     });
   }
@@ -126,6 +158,7 @@ export class UnWallet {
       url.searchParams.set("clientID", this.config.clientID);
       url.searchParams.set("credential", args.credential);
       url.searchParams.set("challenge", args.challenge);
+
       this.openWindow(url);
     });
   }
@@ -163,6 +196,7 @@ export class UnWallet {
           default:
             throw new Error(msg.value);
         }
+        break;
 
       default:
         throw new Error(`unknown message type: ${msg.type}`);

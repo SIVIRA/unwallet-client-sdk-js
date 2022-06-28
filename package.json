@@ -1,6 +1,6 @@
 {
   "name": "unwallet-client-sdk",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "unWallet client-side SDK",
   "license": "MIT",
   "author": "SIVIRA",
@@ -11,6 +11,9 @@
   },
   "scripts": {
     "build": "tsc"
+  },
+  "dependencies": {
+    "ethers": "^5.6.9"
   },
   "devDependencies": {
     "typescript": "^4.3.4"
