@@ -14,6 +14,6 @@ export const unWalletConfigs: { [env: string]: UnWalletConfig } = {
   local: {
     baseURL: "http://localhost:4200",
     authURL: "http://localhost:4200/authorize",
-    wsAPIURL: "wss://in-ws-api.id.unwallet.dev",
+    wsAPIURL: "wss://in-ws-api.id.test.unwallet.dev",
   },
 };
