@@ -70,12 +70,18 @@ export class UnWallet {
     responseMode?: string;
     redirectURL: string;
     nonce: string;
+    isVirtual?: boolean;
   }): void {
     if (!args.responseMode) {
       args.responseMode = "fragment";
     }
 
-    const url = new URL(this.unWalletConfig.authURL);
+    let url: URL;
+    if (args.isVirtual === true) {
+      url = new URL(`${this.unWalletConfig.baseURL}/vauthorize`);
+    } else {
+      url = new URL(`${this.unWalletConfig.baseURL}/authorize`);
+    }
     url.searchParams.set("response_type", "id_token");
     url.searchParams.set("response_mode", args.responseMode);
     url.searchParams.set("client_id", this.config.clientID);

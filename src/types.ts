@@ -5,7 +5,6 @@ export interface Config {
 
 export interface UnWalletConfig {
   baseURL: string;
-  authURL: string;
   wsAPIURL: string;
 }
 
