@@ -69,7 +69,7 @@ export class UnWallet {
   public authorize(args: {
     responseMode?: string;
     redirectURL: string;
-    nonce: string;
+    nonce?: string;
     isVirtual?: boolean;
   }): void {
     if (!args.responseMode) {
@@ -87,7 +87,9 @@ export class UnWallet {
     url.searchParams.set("client_id", this.config.clientID);
     url.searchParams.set("scope", "openid email");
     url.searchParams.set("redirect_uri", args.redirectURL);
-    url.searchParams.set("nonce", args.nonce);
+    if (args.nonce !== undefined) {
+      url.searchParams.set("nonce", args.nonce);
+    }
 
     location.assign(url.toString());
   }
