@@ -77,10 +77,10 @@ export class UnWallet {
     }
 
     let url: URL;
-    if (args.isVirtual === true) {
-      url = new URL(`${this.unWalletConfig.baseURL}/vauthorize`);
-    } else {
+    if (args.isVirtual === false) {
       url = new URL(`${this.unWalletConfig.baseURL}/authorize`);
+    } else {
+      url = new URL(`${this.unWalletConfig.baseURL}/vauthorize`);
     }
     url.searchParams.set("response_type", "id_token");
     url.searchParams.set("response_mode", args.responseMode);
