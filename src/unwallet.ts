@@ -85,7 +85,7 @@ export class UnWallet {
     url.searchParams.set("response_type", "id_token");
     url.searchParams.set("response_mode", args.responseMode);
     url.searchParams.set("client_id", this.config.clientID);
-    url.searchParams.set("scope", "openid email");
+    url.searchParams.set("scope", "openid");
     url.searchParams.set("redirect_uri", args.redirectURL);
     if (args.nonce !== undefined) {
       url.searchParams.set("nonce", args.nonce);
