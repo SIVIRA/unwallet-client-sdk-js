@@ -98,7 +98,7 @@ export class UnWallet {
     return new Promise((resolve, reject) => {
       this.resolve = (sig: string) => {
         resolve({
-          digest: ethers.utils.sha256(ethers.utils.toUtf8Bytes(args.message)),
+          digest: ethers.sha256(ethers.toUtf8Bytes(args.message)),
           signature: sig,
         });
       };
