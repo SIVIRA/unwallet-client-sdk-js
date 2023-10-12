@@ -71,6 +71,7 @@ export class UnWallet {
     redirectURL: string;
     nonce?: string;
     isVirtual?: boolean;
+    network?: string;
   }): void {
     if (!args.responseMode) {
       args.responseMode = "fragment";
@@ -89,6 +90,9 @@ export class UnWallet {
     url.searchParams.set("redirect_uri", args.redirectURL);
     if (args.nonce !== undefined) {
       url.searchParams.set("nonce", args.nonce);
+    }
+    if (args.network !== undefined) {
+      url.searchParams.set("network", args.network);
     }
 
     location.assign(url.toString());
