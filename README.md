@@ -4,8 +4,8 @@
 
 ## Installation
 
-```sh
-$ npm install unwallet-client-sdk
+```
+npm install unwallet-client-sdk
 ```
 
 ## Initialization
