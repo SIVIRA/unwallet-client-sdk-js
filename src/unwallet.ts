@@ -71,28 +71,31 @@ export class UnWallet {
     redirectURL: string;
     nonce?: string;
     isVirtual?: boolean;
-    network?: string;
+    chainID?: number;
   }): void {
     if (!args.responseMode) {
       args.responseMode = "fragment";
     }
 
     let url: URL;
-    if (args.isVirtual === false) {
-      url = new URL(`${this.unWalletConfig.baseURL}/authorize`);
-    } else {
-      url = new URL(`${this.unWalletConfig.baseURL}/vauthorize`);
-    }
-    url.searchParams.set("response_type", "id_token");
-    url.searchParams.set("response_mode", args.responseMode);
-    url.searchParams.set("client_id", this.config.clientID);
-    url.searchParams.set("scope", "openid");
-    url.searchParams.set("redirect_uri", args.redirectURL);
-    if (args.nonce !== undefined) {
-      url.searchParams.set("nonce", args.nonce);
-    }
-    if (args.network !== undefined) {
-      url.searchParams.set("network", args.network);
+    {
+      if (args.isVirtual === false) {
+        url = new URL(`${this.unWalletConfig.baseURL}/authorize`);
+      } else {
+        url = new URL(`${this.unWalletConfig.baseURL}/vauthorize`);
+      }
+
+      url.searchParams.set("response_type", "id_token");
+      url.searchParams.set("response_mode", args.responseMode);
+      url.searchParams.set("client_id", this.config.clientID);
+      url.searchParams.set("scope", "openid");
+      url.searchParams.set("redirect_uri", args.redirectURL);
+      if (args.nonce !== undefined) {
+        url.searchParams.set("nonce", args.nonce);
+      }
+      if (args.chainID !== undefined) {
+        url.searchParams.set("chain_id", args.chainID.toString());
+      }
     }
 
     location.assign(url.toString());
