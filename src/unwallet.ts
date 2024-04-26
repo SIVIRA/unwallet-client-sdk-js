@@ -45,21 +45,26 @@ export class UnWallet {
       const unWalletConfig = unWalletConfigs[config.env];
 
       const ws = new WebSocket(unWalletConfig.wsAPIURL);
-      ws.onerror = (event) => {
-        reject("websocket connection failed");
-      };
-      ws.onopen = (event) => {
-        unWallet.getConnectionID();
-      };
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        if (msg.type === "connectionID") {
-          unWallet.connectionID = msg.value;
-          resolve(unWallet);
-          return;
-        }
-        unWallet.handleWSMessage(msg);
-      };
+      {
+        ws.onerror = (event) => {
+          reject("websocket connection failed");
+        };
+
+        ws.onopen = (event) => {
+          unWallet.getConnectionID();
+        };
+
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          if (msg.type === "connectionID") {
+            unWallet.connectionID = msg.value;
+            resolve(unWallet);
+            return;
+          }
+
+          unWallet.handleWSMessage(msg);
+        };
+      }
 
       // should be run after ws setup
       const unWallet = new UnWallet(config, unWalletConfig, ws);
@@ -112,14 +117,17 @@ export class UnWallet {
       this.reject = reject;
 
       const url = new URL(`${this.unWalletConfig.baseURL}/x/sign`);
-      url.searchParams.set("connectionID", this.connectionID);
-      url.searchParams.set("clientID", this.config.clientID);
-      url.searchParams.set("message", args.message);
+      {
+        url.searchParams.set("connectionID", this.connectionID);
+        url.searchParams.set("clientID", this.config.clientID);
+        url.searchParams.set("message", args.message);
+      }
 
       this.openWindow(url);
     });
   }
 
+  // DEPRECATED
   public signTransaction(args: {
     to: string;
     value?: string;
@@ -130,14 +138,17 @@ export class UnWallet {
       this.reject = reject;
 
       const url = new URL(`${this.unWalletConfig.baseURL}/x/signTransaction`);
-      url.searchParams.set("connectionID", this.connectionID);
-      url.searchParams.set("clientID", this.config.clientID);
-      url.searchParams.set("transaction", JSON.stringify(args));
+      {
+        url.searchParams.set("connectionID", this.connectionID);
+        url.searchParams.set("clientID", this.config.clientID);
+        url.searchParams.set("transaction", JSON.stringify(args));
+      }
 
       this.openWindow(url);
     });
   }
 
+  // DEPRECATED
   public signTokenTransfer(args: {
     id: number;
     to: string;
@@ -148,16 +159,19 @@ export class UnWallet {
       this.reject = reject;
 
       const url = new URL(`${this.unWalletConfig.baseURL}/x/signTokenTransfer`);
-      url.searchParams.set("connectionID", this.connectionID);
-      url.searchParams.set("clientID", this.config.clientID);
-      url.searchParams.set("id", args.id.toString());
-      url.searchParams.set("to", args.to);
-      url.searchParams.set("amount", args.amount.toString());
+      {
+        url.searchParams.set("connectionID", this.connectionID);
+        url.searchParams.set("clientID", this.config.clientID);
+        url.searchParams.set("id", args.id.toString());
+        url.searchParams.set("to", args.to);
+        url.searchParams.set("amount", args.amount.toString());
+      }
 
       this.openWindow(url);
     });
   }
 
+  // DEPRECATED
   public createPresentation(args: {
     credential: string;
     challenge: string;
@@ -169,10 +183,12 @@ export class UnWallet {
       const url = new URL(
         `${this.unWalletConfig.baseURL}/x/createPresentation`
       );
-      url.searchParams.set("connectionID", this.connectionID);
-      url.searchParams.set("clientID", this.config.clientID);
-      url.searchParams.set("credential", args.credential);
-      url.searchParams.set("challenge", args.challenge);
+      {
+        url.searchParams.set("connectionID", this.connectionID);
+        url.searchParams.set("clientID", this.config.clientID);
+        url.searchParams.set("credential", args.credential);
+        url.searchParams.set("challenge", args.challenge);
+      }
 
       this.openWindow(url);
     });
@@ -214,7 +230,7 @@ export class UnWallet {
         break;
 
       default:
-        throw new Error(`unknown message type: ${msg.type}`);
+        throw new Error(`unexpected message type: ${msg.type}`);
     }
 
     this.initPromiseArgs();
