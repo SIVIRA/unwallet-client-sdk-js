@@ -82,14 +82,10 @@ export class UnWallet {
       args.responseMode = "fragment";
     }
 
-    let url: URL;
+    let url = new URL(
+      `${this.unWalletConfig.baseURL}/${args.isVirtual ? "v" : ""}authorize`
+    );
     {
-      if (args.isVirtual === false) {
-        url = new URL(`${this.unWalletConfig.baseURL}/authorize`);
-      } else {
-        url = new URL(`${this.unWalletConfig.baseURL}/vauthorize`);
-      }
-
       url.searchParams.set("response_type", "id_token");
       url.searchParams.set("response_mode", args.responseMode);
       url.searchParams.set("client_id", this.config.clientID);
