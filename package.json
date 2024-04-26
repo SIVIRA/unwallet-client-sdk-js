@@ -1,6 +1,6 @@
 {
   "name": "unwallet-client-sdk",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "unWallet client-side SDK",
   "license": "MIT",
   "author": "SIVIRA",
@@ -16,17 +16,18 @@
   },
   "scripts": {
     "build": "tsc",
-    "commit": "cz"
+    "commit": "cz",
+    "prepare": "husky"
   },
   "dependencies": {
-    "ethers": "6.8.0"
+    "ethers": "6.12.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "17.7.2",
-    "@commitlint/config-conventional": "17.7.0",
+    "@commitlint/cli": "19.3.0",
+    "@commitlint/config-conventional": "19.2.2",
     "commitizen": "4.3.0",
     "cz-conventional-changelog": "3.3.0",
-    "husky": "8.0.3",
-    "typescript": "5.2.2"
+    "husky": "9.0.11",
+    "typescript": "5.4.5"
   }
 }

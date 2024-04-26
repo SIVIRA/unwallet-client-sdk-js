@@ -45,21 +45,26 @@ export class UnWallet {
       const unWalletConfig = unWalletConfigs[config.env];
 
       const ws = new WebSocket(unWalletConfig.wsAPIURL);
-      ws.onerror = (event) => {
-        reject("websocket connection failed");
-      };
-      ws.onopen = (event) => {
-        unWallet.getConnectionID();
-      };
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        if (msg.type === "connectionID") {
-          unWallet.connectionID = msg.value;
-          resolve(unWallet);
-          return;
-        }
-        unWallet.handleWSMessage(msg);
-      };
+      {
+        ws.onerror = (event) => {
+          reject("websocket connection failed");
+        };
+
+        ws.onopen = (event) => {
+          unWallet.getConnectionID();
+        };
+
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          if (msg.type === "connectionID") {
+            unWallet.connectionID = msg.value;
+            resolve(unWallet);
+            return;
+          }
+
+          unWallet.handleWSMessage(msg);
+        };
+      }
 
       // should be run after ws setup
       const unWallet = new UnWallet(config, unWalletConfig, ws);
@@ -71,28 +76,27 @@ export class UnWallet {
     redirectURL: string;
     nonce?: string;
     isVirtual?: boolean;
-    network?: string;
+    chainID?: number;
   }): void {
     if (!args.responseMode) {
       args.responseMode = "fragment";
     }
 
-    let url: URL;
-    if (args.isVirtual === false) {
-      url = new URL(`${this.unWalletConfig.baseURL}/authorize`);
-    } else {
-      url = new URL(`${this.unWalletConfig.baseURL}/vauthorize`);
-    }
-    url.searchParams.set("response_type", "id_token");
-    url.searchParams.set("response_mode", args.responseMode);
-    url.searchParams.set("client_id", this.config.clientID);
-    url.searchParams.set("scope", "openid");
-    url.searchParams.set("redirect_uri", args.redirectURL);
-    if (args.nonce !== undefined) {
-      url.searchParams.set("nonce", args.nonce);
-    }
-    if (args.network !== undefined) {
-      url.searchParams.set("network", args.network);
+    let url = new URL(
+      `${this.unWalletConfig.baseURL}/${args.isVirtual ? "v" : ""}authorize`
+    );
+    {
+      url.searchParams.set("response_type", "id_token");
+      url.searchParams.set("response_mode", args.responseMode);
+      url.searchParams.set("client_id", this.config.clientID);
+      url.searchParams.set("scope", "openid");
+      url.searchParams.set("redirect_uri", args.redirectURL);
+      if (args.nonce !== undefined) {
+        url.searchParams.set("nonce", args.nonce);
+      }
+      if (args.chainID !== undefined) {
+        url.searchParams.set("chain_id", args.chainID.toString());
+      }
     }
 
     location.assign(url.toString());
@@ -109,14 +113,17 @@ export class UnWallet {
       this.reject = reject;
 
       const url = new URL(`${this.unWalletConfig.baseURL}/x/sign`);
-      url.searchParams.set("connectionID", this.connectionID);
-      url.searchParams.set("clientID", this.config.clientID);
-      url.searchParams.set("message", args.message);
+      {
+        url.searchParams.set("connectionID", this.connectionID);
+        url.searchParams.set("clientID", this.config.clientID);
+        url.searchParams.set("message", args.message);
+      }
 
       this.openWindow(url);
     });
   }
 
+  // DEPRECATED
   public signTransaction(args: {
     to: string;
     value?: string;
@@ -127,14 +134,17 @@ export class UnWallet {
       this.reject = reject;
 
       const url = new URL(`${this.unWalletConfig.baseURL}/x/signTransaction`);
-      url.searchParams.set("connectionID", this.connectionID);
-      url.searchParams.set("clientID", this.config.clientID);
-      url.searchParams.set("transaction", JSON.stringify(args));
+      {
+        url.searchParams.set("connectionID", this.connectionID);
+        url.searchParams.set("clientID", this.config.clientID);
+        url.searchParams.set("transaction", JSON.stringify(args));
+      }
 
       this.openWindow(url);
     });
   }
 
+  // DEPRECATED
   public signTokenTransfer(args: {
     id: number;
     to: string;
@@ -145,31 +155,13 @@ export class UnWallet {
       this.reject = reject;
 
       const url = new URL(`${this.unWalletConfig.baseURL}/x/signTokenTransfer`);
-      url.searchParams.set("connectionID", this.connectionID);
-      url.searchParams.set("clientID", this.config.clientID);
-      url.searchParams.set("id", args.id.toString());
-      url.searchParams.set("to", args.to);
-      url.searchParams.set("amount", args.amount.toString());
-
-      this.openWindow(url);
-    });
-  }
-
-  public createPresentation(args: {
-    credential: string;
-    challenge: string;
-  }): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-
-      const url = new URL(
-        `${this.unWalletConfig.baseURL}/x/createPresentation`
-      );
-      url.searchParams.set("connectionID", this.connectionID);
-      url.searchParams.set("clientID", this.config.clientID);
-      url.searchParams.set("credential", args.credential);
-      url.searchParams.set("challenge", args.challenge);
+      {
+        url.searchParams.set("connectionID", this.connectionID);
+        url.searchParams.set("clientID", this.config.clientID);
+        url.searchParams.set("id", args.id.toString());
+        url.searchParams.set("to", args.to);
+        url.searchParams.set("amount", args.amount.toString());
+      }
 
       this.openWindow(url);
     });
@@ -195,10 +187,6 @@ export class UnWallet {
         this.resolve!(msg.value);
         break;
 
-      case "presentation":
-        this.resolve!(msg.value);
-        break;
-
       case "error":
         switch (msg.value) {
           case "rejected":
@@ -211,7 +199,7 @@ export class UnWallet {
         break;
 
       default:
-        throw new Error(`unknown message type: ${msg.type}`);
+        throw new Error(`unexpected message type: ${msg.type}`);
     }
 
     this.initPromiseArgs();
