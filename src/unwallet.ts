@@ -187,10 +187,6 @@ export class UnWallet {
         this.resolve!(msg.value);
         break;
 
-      case "presentation":
-        this.resolve!(msg.value);
-        break;
-
       case "error":
         switch (msg.value) {
           case "rejected":
