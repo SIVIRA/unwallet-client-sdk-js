@@ -171,29 +171,6 @@ export class UnWallet {
     });
   }
 
-  // DEPRECATED
-  public createPresentation(args: {
-    credential: string;
-    challenge: string;
-  }): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-
-      const url = new URL(
-        `${this.unWalletConfig.baseURL}/x/createPresentation`
-      );
-      {
-        url.searchParams.set("connectionID", this.connectionID);
-        url.searchParams.set("clientID", this.config.clientID);
-        url.searchParams.set("credential", args.credential);
-        url.searchParams.set("challenge", args.challenge);
-      }
-
-      this.openWindow(url);
-    });
-  }
-
   private getConnectionID(): void {
     this.sendWSMessage({
       action: "getConnectionID",
