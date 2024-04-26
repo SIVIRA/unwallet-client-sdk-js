@@ -83,7 +83,9 @@ export class UnWallet {
     }
 
     let url = new URL(
-      `${this.unWalletConfig.baseURL}/${args.isVirtual ? "v" : ""}authorize`
+      `${this.unWalletConfig.baseURL}/${
+        args.isVirtual === false ? "" : "v"
+      }authorize`
     );
     {
       url.searchParams.set("response_type", "id_token");
