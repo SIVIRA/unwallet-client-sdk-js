@@ -133,6 +133,10 @@ export class UnWallet {
     ticket: string;
   }): Promise<SendTransactionResult> {
     return new Promise((resolve, reject) => {
+      if (args.value === undefined && args.data === undefined) {
+        throw new Error("either value or data required");
+      }
+
       this.resolve = (txID: string) => {
         resolve({ TransactionID: txID });
       };
