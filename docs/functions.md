@@ -7,6 +7,8 @@
 
 `authorize` requests a user's ID token in accordance with OpenID Connect (response_type: id_token).
 
+### Example call
+
 ```js
 unWallet.authorize({
   redirectURL: "http://your.app.com/callback",
@@ -18,13 +20,15 @@ unWallet.authorize({
 
 `sign` requests a signature for a message.
 
+### Example call
+
 ```js
-const sig = await unWallet.sign({
+const result = await unWallet.sign({
   message: "ARBITRARY_MESSAGE",
 });
 ```
 
-### Example return value
+### Example result
 
 ```json
 {
@@ -87,12 +91,21 @@ const ethers = require("ethers");
 
 `sendTransaction` requests to send a transaction.
 
+### Example call
+
 ```js
-// TODO
+const result = await unWallet.sendTransaction({
+  chainID: 137,
+  toAddress: "0x0000000000000000000000000000000000000000",
+  value: "0x1",
+  ticket: "TODO",
+});
 ```
 
-### Example return value
+### Example result
 
 ```json
-// TODO
+{
+  "transactionID": "UXVldWVkVHJhbnNhY3Rpb246MQ=="
+}
 ```

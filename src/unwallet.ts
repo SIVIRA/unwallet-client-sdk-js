@@ -1,7 +1,12 @@
 import { ethers } from "ethers";
 
 import { unWalletConfigs } from "./configs";
-import { Config, UnWalletConfig, DigestAndSignature } from "./types";
+import {
+  Config,
+  UnWalletConfig,
+  SignResult,
+  SendTransactionResult,
+} from "./types";
 
 export class UnWallet {
   private config: Config;
@@ -99,7 +104,7 @@ export class UnWallet {
     location.assign(url.toString());
   }
 
-  public sign(args: { message: string }): Promise<DigestAndSignature> {
+  public sign(args: { message: string }): Promise<SignResult> {
     return new Promise((resolve, reject) => {
       this.resolve = (sig: string) => {
         resolve({
@@ -114,6 +119,34 @@ export class UnWallet {
         url.searchParams.set("connectionID", this.connectionID);
         url.searchParams.set("clientID", this.config.clientID);
         url.searchParams.set("message", args.message);
+      }
+
+      this.openWindow(url);
+    });
+  }
+
+  public sendTransaction(args: {
+    chainID: number;
+    toAddress: string;
+    value: string;
+    data: string;
+    ticket: string;
+  }): Promise<SendTransactionResult> {
+    return new Promise((resolve, reject) => {
+      this.resolve = (txID: string) => {
+        resolve({ TransactionID: txID });
+      };
+      this.reject = reject;
+
+      const url = new URL(`${this.unWalletConfig.baseURL}/x/sendTransaction`);
+      {
+        url.searchParams.set("connectionID", this.connectionID);
+        url.searchParams.set("clientID", this.config.clientID);
+        url.searchParams.set("chainID", args.chainID.toString());
+        url.searchParams.set("toAddress", args.toAddress);
+        url.searchParams.set("value", args.value);
+        url.searchParams.set("data", args.data);
+        url.searchParams.set("ticket", args.ticket);
       }
 
       this.openWindow(url);
