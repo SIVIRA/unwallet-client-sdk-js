@@ -94,7 +94,7 @@ const ethers = require("ethers");
 ### Example call
 
 > **Note**\
-> You need to issue a transaction ticket via unWallet Enterprise API v2 in advance.
+> You need to issue a transaction ticket via unWallet Enterprise API in advance.
 
 ```js
 const result = await unWallet.sendTransaction({
@@ -113,3 +113,6 @@ const result = await unWallet.sendTransaction({
   "transactionID": "UXVldWVkVHJhbnNhY3Rpb246MQ=="
 }
 ```
+
+> **Note**\
+> You can get the transaction detail via unWallet Enterprise API.
