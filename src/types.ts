@@ -12,9 +12,3 @@ export interface DigestAndSignature {
   digest: string;
   signature: string;
 }
-
-export interface MetaTransaction {
-  executor: string;
-  data: string;
-  signature: string;
-}

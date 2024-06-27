@@ -1,12 +1,7 @@
 import { ethers } from "ethers";
 
 import { unWalletConfigs } from "./configs";
-import {
-  Config,
-  UnWalletConfig,
-  DigestAndSignature,
-  MetaTransaction,
-} from "./types";
+import { Config, UnWalletConfig, DigestAndSignature } from "./types";
 
 export class UnWallet {
   private config: Config;
@@ -119,50 +114,6 @@ export class UnWallet {
         url.searchParams.set("connectionID", this.connectionID);
         url.searchParams.set("clientID", this.config.clientID);
         url.searchParams.set("message", args.message);
-      }
-
-      this.openWindow(url);
-    });
-  }
-
-  // DEPRECATED
-  public signTransaction(args: {
-    to: string;
-    value?: string;
-    data?: string;
-  }): Promise<MetaTransaction> {
-    return new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-
-      const url = new URL(`${this.unWalletConfig.baseURL}/x/signTransaction`);
-      {
-        url.searchParams.set("connectionID", this.connectionID);
-        url.searchParams.set("clientID", this.config.clientID);
-        url.searchParams.set("transaction", JSON.stringify(args));
-      }
-
-      this.openWindow(url);
-    });
-  }
-
-  // DEPRECATED
-  public signTokenTransfer(args: {
-    id: number;
-    to: string;
-    amount: number;
-  }): Promise<MetaTransaction> {
-    return new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-
-      const url = new URL(`${this.unWalletConfig.baseURL}/x/signTokenTransfer`);
-      {
-        url.searchParams.set("connectionID", this.connectionID);
-        url.searchParams.set("clientID", this.config.clientID);
-        url.searchParams.set("id", args.id.toString());
-        url.searchParams.set("to", args.to);
-        url.searchParams.set("amount", args.amount.toString());
       }
 
       this.openWindow(url);
