@@ -128,8 +128,8 @@ export class UnWallet {
   public sendTransaction(args: {
     chainID: number;
     toAddress: string;
-    value: string;
-    data: string;
+    value?: string;
+    data?: string;
     ticket: string;
   }): Promise<SendTransactionResult> {
     return new Promise((resolve, reject) => {
@@ -144,8 +144,14 @@ export class UnWallet {
         url.searchParams.set("clientID", this.config.clientID);
         url.searchParams.set("chainID", args.chainID.toString());
         url.searchParams.set("toAddress", args.toAddress);
-        url.searchParams.set("value", args.value);
-        url.searchParams.set("data", args.data);
+        url.searchParams.set(
+          "value",
+          args.value !== undefined ? args.value : "0x0"
+        );
+        url.searchParams.set(
+          "data",
+          args.data !== undefined ? args.data : "0x"
+        );
         url.searchParams.set("ticket", args.ticket);
       }
 
