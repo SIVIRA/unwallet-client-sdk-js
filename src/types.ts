@@ -8,13 +8,11 @@ export interface UnWalletConfig {
   wsAPIURL: string;
 }
 
-export interface DigestAndSignature {
+export interface SignResult {
   digest: string;
   signature: string;
 }
 
-export interface MetaTransaction {
-  executor: string;
-  data: string;
-  signature: string;
+export interface SendTransactionResult {
+  TransactionID: string;
 }

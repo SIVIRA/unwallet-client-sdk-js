@@ -4,8 +4,8 @@ import { unWalletConfigs } from "./configs";
 import {
   Config,
   UnWalletConfig,
-  DigestAndSignature,
-  MetaTransaction,
+  SignResult,
+  SendTransactionResult,
 } from "./types";
 
 export class UnWallet {
@@ -104,7 +104,7 @@ export class UnWallet {
     location.assign(url.toString());
   }
 
-  public sign(args: { message: string }): Promise<DigestAndSignature> {
+  public sign(args: { message: string }): Promise<SignResult> {
     return new Promise((resolve, reject) => {
       this.resolve = (sig: string) => {
         resolve({
@@ -125,44 +125,38 @@ export class UnWallet {
     });
   }
 
-  // DEPRECATED
-  public signTransaction(args: {
-    to: string;
+  public sendTransaction(args: {
+    chainID: number;
+    toAddress: string;
     value?: string;
     data?: string;
-  }): Promise<MetaTransaction> {
+    ticket: string;
+  }): Promise<SendTransactionResult> {
     return new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-
-      const url = new URL(`${this.unWalletConfig.baseURL}/x/signTransaction`);
-      {
-        url.searchParams.set("connectionID", this.connectionID);
-        url.searchParams.set("clientID", this.config.clientID);
-        url.searchParams.set("transaction", JSON.stringify(args));
+      if (args.value === undefined && args.data === undefined) {
+        throw new Error("either value or data required");
       }
 
-      this.openWindow(url);
-    });
-  }
-
-  // DEPRECATED
-  public signTokenTransfer(args: {
-    id: number;
-    to: string;
-    amount: number;
-  }): Promise<MetaTransaction> {
-    return new Promise((resolve, reject) => {
-      this.resolve = resolve;
+      this.resolve = (txID: string) => {
+        resolve({ TransactionID: txID });
+      };
       this.reject = reject;
 
-      const url = new URL(`${this.unWalletConfig.baseURL}/x/signTokenTransfer`);
+      const url = new URL(`${this.unWalletConfig.baseURL}/x/sendTransaction`);
       {
         url.searchParams.set("connectionID", this.connectionID);
         url.searchParams.set("clientID", this.config.clientID);
-        url.searchParams.set("id", args.id.toString());
-        url.searchParams.set("to", args.to);
-        url.searchParams.set("amount", args.amount.toString());
+        url.searchParams.set("chainID", args.chainID.toString());
+        url.searchParams.set("toAddress", args.toAddress);
+        url.searchParams.set(
+          "value",
+          args.value !== undefined ? args.value : "0x0"
+        );
+        url.searchParams.set(
+          "data",
+          args.data !== undefined ? args.data : "0x"
+        );
+        url.searchParams.set("ticket", args.ticket);
       }
 
       this.openWindow(url);

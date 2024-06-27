@@ -1,16 +1,18 @@
-# Functions (for all developers)
+# Functions
 
 > **Note**\
-> To execute the sample codes below, you need to create an application with unWallet Enterprise in advance.
+> You need to register your application to unWallet Enterprise in advance.
 
 ## authorize
 
 `authorize` requests a user's ID token in accordance with OpenID Connect (response_type: id_token).
 
+### Example call
+
 ```js
 unWallet.authorize({
   redirectURL: "http://your.app.com/callback",
-  nonce: "pdITKAtep0pfPOrUXdzjqW6gKvXezurJ", // arbitrary string to prevent replay attacks
+  nonce: "ARBITRARY_STRING_TO_PREVENT_REPLAY_ATTACKS",
 });
 ```
 
@@ -18,13 +20,15 @@ unWallet.authorize({
 
 `sign` requests a signature for a message.
 
+### Example call
+
 ```js
-const sig = await unWallet.sign({
+const result = await unWallet.sign({
   message: "ARBITRARY_MESSAGE",
 });
 ```
 
-### Example return value
+### Example result
 
 ```json
 {
@@ -83,26 +87,32 @@ const ethers = require("ethers");
 })();
 ```
 
-## signTokenTransfer
+## sendTransaction
 
-`signTokenTransfer` requests a signature for a token transfer transaction.
+`sendTransaction` requests to send a transaction.
+
+### Example call
+
+> **Note**\
+> You need to issue a transaction ticket via unWallet Enterprise API in advance.
 
 ```js
-const metaTx = await unWallet.signTokenTransfer({
-  id: 101, // token ID
-  to: "0xB481148EB6A5f6b5b9Cc10cb0C8304B9B179A8e6", // destination address
-  amount: 1, // token amount
+const result = await unWallet.sendTransaction({
+  chainID: 80002,
+  toAddress: "0xC2C747E0F7004F9E8817Db2ca4997657a7746928",
+  value: "0xde0b6b3a7640000", // the amount of native token to be transferred
+  ticket:
+    "eyJhbGciOiJFUzI1NiIsImtpZCI6IjEiLCJ0eXAiOiJKV1QifQ.eyJhcGlDbGllbnRJRCI6IlFWQkpRMnhwWlc1ME9qRT0iLCJjaGFpbklEIjo4MDAwMiwiY2xpZW50SUQiOiJDWHFsSnBLWWlYTHpWdXEzbVU0OVVZNVVGbjJOM1VSVnQiLCJleHAiOjE3MTk0OTM3NzEsImlhdCI6MTcxOTQ5MzcxMSwiaWQiOiJkYjA1OTQ1MDI4MDQ4MWQ1ZjMxOWNlZWIwZTJkMjQ4MTNkNjc4OTdlODA1MGU1YTVmNWIyZWJkNzUxYmMwM2Y5IiwicGF5bWVudFR5cGUiOiJ1c2VyIiwidHJhbnNhY3Rpb25EYXRhIjoiMHgiLCJ0cmFuc2FjdGlvbkZyb21BZGRyZXNzIjoiMHgxMDVmNDMxMGIzRDE4RTNEN0YxOWZEN0RGNDg4NzM1YTE1MGVlZDJhIiwidHJhbnNhY3Rpb25Ub0FkZHJlc3MiOiIweEMyQzc0N0UwRjcwMDRGOUU4ODE3RGIyY2E0OTk3NjU3YTc3NDY5MjgiLCJ0cmFuc2FjdGlvblZhbHVlIjoiMHhkZTBiNmIzYTc2NDAwMDAifQ.LIzAe8Ar3c0KNWf0bczVUDodMj6pwwWngESC7AaWI9PHbmeQ6q3zsXgFJm__pi1mLJ79fHZfI0DF4fjreUDZtQ",
 });
 ```
 
-### Example return value
+### Example result
 
 ```json
 {
-  "executor": "0x3ADBDCBa56d70Fc15Dcbe98901432cC07B2aAaeF",
-  "data": "0x...",
-  "signature": "0x19eb83842bc2d2c55567d4da63981ae9d4ce76ec567b591f18e18f4e030c4389331ba3ce0f1549331cb51710881320982b7b7a3632a7d81ca214690ecf3267c51c"
+  "transactionID": "UXVldWVkVHJhbnNhY3Rpb246MQ=="
 }
 ```
 
-To execute the transaction, call [POST /metaTransactions of unWallet Enterprise API](https://developers.ent.unwallet.world/ja/latest/unwallet-ent-api.html#post-metatransactions).
+> **Note**\
+> You can get the transaction detail via unWallet Enterprise API.

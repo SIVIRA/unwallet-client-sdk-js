@@ -1,6 +1,6 @@
 # unWallet client-side SDK
 
-:warning: This SDK works fine only on browsers.
+:warning: This SDK works correctly only on web browsers.
 
 ## Installation
 
@@ -18,7 +18,6 @@ const unWallet = await UnWallet.init({
 });
 ```
 
-## Functions
+## Usage
 
-- [For all developers](docs/functions-1.md)
-- [For web3 developers](docs/functions-2.md)
+See [Functions](docs/functions.md).
