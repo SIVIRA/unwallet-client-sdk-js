@@ -1,7 +1,7 @@
 # Functions
 
 > **Note**\
-> To execute the sample codes below, you need to create an application with unWallet Enterprise in advance.
+> You need to register your application to unWallet Enterprise in advance.
 
 ## authorize
 
@@ -93,12 +93,16 @@ const ethers = require("ethers");
 
 ### Example call
 
+> **Note**\
+> You need to issue a transaction ticket via unWallet Enterprise API v2 in advance.
+
 ```js
 const result = await unWallet.sendTransaction({
-  chainID: 137,
-  toAddress: "0x0000000000000000000000000000000000000000",
-  value: "0x1",
-  ticket: "TODO",
+  chainID: 80002,
+  toAddress: "0xC2C747E0F7004F9E8817Db2ca4997657a7746928",
+  value: "0xde0b6b3a7640000", // the amount of native token to be transferred
+  ticket:
+    "eyJhbGciOiJFUzI1NiIsImtpZCI6IjEiLCJ0eXAiOiJKV1QifQ.eyJhcGlDbGllbnRJRCI6IlFWQkpRMnhwWlc1ME9qRT0iLCJjaGFpbklEIjo4MDAwMiwiY2xpZW50SUQiOiJDWHFsSnBLWWlYTHpWdXEzbVU0OVVZNVVGbjJOM1VSVnQiLCJleHAiOjE3MTk0OTM3NzEsImlhdCI6MTcxOTQ5MzcxMSwiaWQiOiJkYjA1OTQ1MDI4MDQ4MWQ1ZjMxOWNlZWIwZTJkMjQ4MTNkNjc4OTdlODA1MGU1YTVmNWIyZWJkNzUxYmMwM2Y5IiwicGF5bWVudFR5cGUiOiJ1c2VyIiwidHJhbnNhY3Rpb25EYXRhIjoiMHgiLCJ0cmFuc2FjdGlvbkZyb21BZGRyZXNzIjoiMHgxMDVmNDMxMGIzRDE4RTNEN0YxOWZEN0RGNDg4NzM1YTE1MGVlZDJhIiwidHJhbnNhY3Rpb25Ub0FkZHJlc3MiOiIweEMyQzc0N0UwRjcwMDRGOUU4ODE3RGIyY2E0OTk3NjU3YTc3NDY5MjgiLCJ0cmFuc2FjdGlvblZhbHVlIjoiMHhkZTBiNmIzYTc2NDAwMDAifQ.LIzAe8Ar3c0KNWf0bczVUDodMj6pwwWngESC7AaWI9PHbmeQ6q3zsXgFJm__pi1mLJ79fHZfI0DF4fjreUDZtQ",
 });
 ```
 
