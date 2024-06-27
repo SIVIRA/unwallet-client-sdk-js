@@ -1,4 +1,4 @@
-# Functions (for all developers)
+# Functions
 
 > **Note**\
 > To execute the sample codes below, you need to create an application with unWallet Enterprise in advance.
@@ -10,7 +10,7 @@
 ```js
 unWallet.authorize({
   redirectURL: "http://your.app.com/callback",
-  nonce: "pdITKAtep0pfPOrUXdzjqW6gKvXezurJ", // arbitrary string to prevent replay attacks
+  nonce: "ARBITRARY_STRING_TO_PREVENT_REPLAY_ATTACKS",
 });
 ```
 
@@ -83,26 +83,16 @@ const ethers = require("ethers");
 })();
 ```
 
-## signTokenTransfer
+## sendTransaction
 
-`signTokenTransfer` requests a signature for a token transfer transaction.
+`sendTransaction` requests to send a transaction.
 
 ```js
-const metaTx = await unWallet.signTokenTransfer({
-  id: 101, // token ID
-  to: "0xB481148EB6A5f6b5b9Cc10cb0C8304B9B179A8e6", // destination address
-  amount: 1, // token amount
-});
+// TODO
 ```
 
 ### Example return value
 
 ```json
-{
-  "executor": "0x3ADBDCBa56d70Fc15Dcbe98901432cC07B2aAaeF",
-  "data": "0x...",
-  "signature": "0x19eb83842bc2d2c55567d4da63981ae9d4ce76ec567b591f18e18f4e030c4389331ba3ce0f1549331cb51710881320982b7b7a3632a7d81ca214690ecf3267c51c"
-}
+// TODO
 ```
-
-To execute the transaction, call [POST /metaTransactions of unWallet Enterprise API](https://developers.ent.unwallet.world/ja/latest/unwallet-ent-api.html#post-metatransactions).
