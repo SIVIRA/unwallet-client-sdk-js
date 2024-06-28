@@ -14,5 +14,5 @@ export interface SignResult {
 }
 
 export interface SendTransactionResult {
-  TransactionID: string;
+  transactionID: string;
 }
