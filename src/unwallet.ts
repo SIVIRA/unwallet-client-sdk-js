@@ -138,7 +138,7 @@ export class UnWallet {
       }
 
       this.resolve = (txID: string) => {
-        resolve({ TransactionID: txID });
+        resolve({ transactionID: txID });
       };
       this.reject = reject;
 
@@ -179,7 +179,7 @@ export class UnWallet {
         this.resolve!(msg.value);
         break;
 
-      case "metaTransaction":
+      case "transactionID":
         this.resolve!(msg.value);
         break;
 
