@@ -4,8 +4,16 @@ export interface Config {
 }
 
 export interface UnWalletConfig {
+  frontend: UnWalletFrontendConfig;
+  xapi: UnWalletXAPIConfig;
+}
+
+export interface UnWalletFrontendConfig {
   baseURL: string;
-  wsAPIURL: string;
+}
+
+export interface UnWalletXAPIConfig {
+  url: string;
 }
 
 export interface SignResult {
