@@ -44,7 +44,7 @@ export class UnWallet {
 
       const unWalletConfig = unWalletConfigs[config.env];
 
-      const ws = new WebSocket(unWalletConfig.wsAPIURL);
+      const ws = new WebSocket(unWalletConfig.xapi.url);
       {
         ws.onerror = (event) => {
           reject("websocket connection failed");
@@ -83,7 +83,7 @@ export class UnWallet {
     }
 
     let url = new URL(
-      `${this.unWalletConfig.baseURL}/${
+      `${this.unWalletConfig.frontend.baseURL}/${
         args.isVirtual === false ? "" : "v"
       }authorize`
     );
@@ -114,7 +114,7 @@ export class UnWallet {
       };
       this.reject = reject;
 
-      const url = new URL(`${this.unWalletConfig.baseURL}/x/sign`);
+      const url = new URL(`${this.unWalletConfig.frontend.baseURL}/x/sign`);
       {
         url.searchParams.set("connectionID", this.connectionID);
         url.searchParams.set("clientID", this.config.clientID);
@@ -142,7 +142,9 @@ export class UnWallet {
       };
       this.reject = reject;
 
-      const url = new URL(`${this.unWalletConfig.baseURL}/x/sendTransaction`);
+      const url = new URL(
+        `${this.unWalletConfig.frontend.baseURL}/x/sendTransaction`
+      );
       {
         url.searchParams.set("connectionID", this.connectionID);
         url.searchParams.set("clientID", this.config.clientID);
