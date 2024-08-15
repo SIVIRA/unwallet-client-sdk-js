@@ -104,7 +104,7 @@ export class UnWallet {
     location.assign(url.toString());
   }
 
-  public sign(args: { message: string }): Promise<SignResult> {
+  public sign(args: { message: string; ticket: string }): Promise<SignResult> {
     return new Promise((resolve, reject) => {
       this.resolve = (sig: string) => {
         resolve({
@@ -119,6 +119,7 @@ export class UnWallet {
         url.searchParams.set("connectionID", this.connectionID);
         url.searchParams.set("clientID", this.config.clientID);
         url.searchParams.set("message", args.message);
+        url.searchParams.set("ticket", args.ticket);
       }
 
       this.openWindow(url);
