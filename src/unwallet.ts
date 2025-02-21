@@ -104,7 +104,10 @@ export class UnWallet {
     location.assign(url.toString());
   }
 
-  public sign(args: { message: string; ticket: string }): Promise<SignResult> {
+  public sign(args: {
+    message: string;
+    ticketToken: string;
+  }): Promise<SignResult> {
     return new Promise((resolve, reject) => {
       this.resolve = (sig: string) => {
         resolve({
@@ -119,7 +122,7 @@ export class UnWallet {
         url.searchParams.set("connectionID", this.connectionID);
         url.searchParams.set("clientID", this.config.clientID);
         url.searchParams.set("message", args.message);
-        url.searchParams.set("ticket", args.ticket);
+        url.searchParams.set("ticketToken", args.ticketToken);
       }
 
       this.openWindow(url);
@@ -131,7 +134,7 @@ export class UnWallet {
     toAddress: string;
     value?: string;
     data?: string;
-    ticket: string;
+    ticketToken: string;
   }): Promise<SendTransactionResult> {
     return new Promise((resolve, reject) => {
       if (args.value === undefined && args.data === undefined) {
@@ -159,7 +162,7 @@ export class UnWallet {
           "data",
           args.data !== undefined ? args.data : "0x"
         );
-        url.searchParams.set("ticket", args.ticket);
+        url.searchParams.set("ticketToken", args.ticketToken);
       }
 
       this.openWindow(url);
