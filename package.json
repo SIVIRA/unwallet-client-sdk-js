@@ -1,4 +1,5 @@
 {
+  "packageManager": "pnpm@9.14.4+sha512.c8180b3fbe4e4bca02c94234717896b5529740a6cbadf19fa78254270403ea2f27d4e1d46a08a0f56c89b63dc8ebfd3ee53326da720273794e6200fcf0d184ab",
   "name": "unwallet-client-sdk",
   "version": "0.13.0",
   "description": "unWallet client-side SDK",
@@ -20,14 +21,14 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "ethers": "6.13.2"
+    "ethers": "6.13.5"
   },
   "devDependencies": {
-    "@commitlint/cli": "19.4.0",
-    "@commitlint/config-conventional": "19.2.2",
-    "commitizen": "4.3.0",
+    "@commitlint/cli": "19.7.1",
+    "@commitlint/config-conventional": "19.7.1",
+    "commitizen": "4.3.1",
     "cz-conventional-changelog": "3.3.0",
-    "husky": "9.1.4",
-    "typescript": "5.5.4"
+    "husky": "9.1.7",
+    "typescript": "5.7.3"
   }
 }
