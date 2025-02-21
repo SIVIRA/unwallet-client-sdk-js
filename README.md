@@ -20,4 +20,4 @@ const unWallet = await UnWallet.init({
 
 ## Usage
 
-See [Functions](docs/functions.md).
+https://developers.ent.unwallet.world/01_spec/02_client-side-sdk
