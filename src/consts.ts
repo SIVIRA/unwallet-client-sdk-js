@@ -2,6 +2,11 @@ import { UnWalletConfig } from "./types";
 
 export const VALID_ENVS = ["prod", "dev"] as const;
 
+export const VALID_AUTHORIZATION_RESPONSE_MODES = [
+  "fragment",
+  "form_post",
+] as const;
+
 export const UNWALLET_CONFIG_PROD: UnWalletConfig = {
   frontend: {
     baseURL: "https://id.unwallet.world",
