@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 
-import { unWalletConfigs } from "./configs";
+import { UNWALLET_CONFIG_PROD, UNWALLET_CONFIG_DEV } from "./consts";
 import {
   Config,
   UnWalletConfig,
@@ -29,8 +29,8 @@ export class UnWallet {
   }
 
   private initPromiseArgs(): void {
-    this.resolve = (result: any) => {};
-    this.reject = (reason: any) => {};
+    this.resolve = () => {};
+    this.reject = () => {};
   }
 
   public static init(config: Config): Promise<UnWallet> {
@@ -38,19 +38,26 @@ export class UnWallet {
       if (config.env === undefined) {
         config.env = "prod";
       }
-      if (!(config.env in unWalletConfigs)) {
-        throw Error("invalid env");
-      }
 
-      const unWalletConfig = unWalletConfigs[config.env];
+      let unWalletConfig: UnWalletConfig;
+      {
+        switch (config.env) {
+          case "prod":
+            unWalletConfig = UNWALLET_CONFIG_PROD;
+            break;
+          case "dev":
+            unWalletConfig = UNWALLET_CONFIG_DEV;
+            break;
+        }
+      }
 
       const ws = new WebSocket(unWalletConfig.xapi.url);
       {
-        ws.onerror = (event) => {
+        ws.onerror = () => {
           reject("websocket connection failed");
         };
 
-        ws.onopen = (event) => {
+        ws.onopen = () => {
           unWallet.getConnectionID();
         };
 
