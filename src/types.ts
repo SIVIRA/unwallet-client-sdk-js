@@ -1,6 +1,9 @@
-import { VALID_ENVS } from "./consts";
+import { VALID_ENVS, VALID_AUTHORIZATION_RESPONSE_MODES } from "./consts";
 
 export type Env = (typeof VALID_ENVS)[number];
+
+export type AuthorizationResponseMode =
+  (typeof VALID_AUTHORIZATION_RESPONSE_MODES)[number];
 
 export interface Config {
   clientID: string;

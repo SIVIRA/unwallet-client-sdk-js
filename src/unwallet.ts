@@ -2,6 +2,7 @@ import { ethers } from "ethers";
 
 import { UNWALLET_CONFIG_PROD, UNWALLET_CONFIG_DEV } from "./consts";
 import {
+  AuthorizationResponseMode,
   Config,
   UnWalletConfig,
   SignResult,
@@ -79,19 +80,22 @@ export class UnWallet {
   }
 
   public authorize(args: {
-    responseMode?: string;
+    responseMode?: AuthorizationResponseMode;
     redirectURL: string;
     nonce?: string;
     isVirtual?: boolean;
     chainID?: number;
   }): void {
-    if (!args.responseMode) {
+    if (args.responseMode === undefined) {
       args.responseMode = "fragment";
     }
+    if (args.isVirtual === undefined) {
+      args.isVirtual = true;
+    }
 
-    let url = new URL(
+    const url = new URL(
       `${this.unWalletConfig.frontend.baseURL}/${
-        args.isVirtual === false ? "" : "v"
+        args.isVirtual ? "v" : ""
       }authorize`
     );
     {
