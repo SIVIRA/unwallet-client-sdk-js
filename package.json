@@ -1,14 +1,28 @@
 {
   "name": "unwallet-client-sdk",
   "version": "0.14.0",
-  "description": "unWallet client-side SDK",
+  "description": "unWallet client SDK",
   "license": "MIT",
   "author": "SIVIRA",
-  "main": "dist/index.js",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/SIVIRA/unwallet-client-sdk-js.git"
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      }
+    }
   },
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "repository": "github:SIVIRA/unwallet-client-sdk-js",
   "scripts": {
     "build": "tsup",
     "commit": "cz",
