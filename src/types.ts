@@ -1,6 +1,10 @@
+import { VALID_ENVS } from "./consts";
+
+export type Env = (typeof VALID_ENVS)[number];
+
 export interface Config {
   clientID: string;
-  env?: string;
+  env?: Env;
 }
 
 export interface UnWalletConfig {
