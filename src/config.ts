@@ -23,8 +23,8 @@ export const UNWALLET_CONFIG_DEV: UnWalletConfig = {
 export type Env = (typeof VALID_ENVS)[number];
 
 export interface Config {
-  clientID: string;
   env?: Env;
+  clientID: string;
 }
 
 export interface UnWalletConfig {
@@ -39,4 +39,13 @@ export interface UnWalletFrontendConfig {
 export interface UnWalletXAPIConfig {
   url: string;
   connectionTimeout: number; // msec
+}
+
+export function getUnWalletConfigByEnv(env: Env): UnWalletConfig {
+  switch (env) {
+    case "prod":
+      return UNWALLET_CONFIG_PROD;
+    case "dev":
+      return UNWALLET_CONFIG_DEV;
+  }
 }
