@@ -1,13 +1,28 @@
 import { ethers } from "ethers";
 
-import { UNWALLET_CONFIG_PROD, UNWALLET_CONFIG_DEV } from "./consts";
 import {
-  AuthorizationResponseMode,
+  UNWALLET_CONFIG_PROD,
+  UNWALLET_CONFIG_DEV,
   Config,
   UnWalletConfig,
-  SignResult,
-  SendTransactionResult,
-} from "./types";
+} from "./config";
+
+export const VALID_AUTHORIZATION_RESPONSE_MODES = [
+  "fragment",
+  "form_post",
+] as const;
+
+export type AuthorizationResponseMode =
+  (typeof VALID_AUTHORIZATION_RESPONSE_MODES)[number];
+
+export interface SignResult {
+  digest: string;
+  signature: string;
+}
+
+export interface SendTransactionResult {
+  transactionID: string;
+}
 
 export class UnWallet {
   private config: Config;
