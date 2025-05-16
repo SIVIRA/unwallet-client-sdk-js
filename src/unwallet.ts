@@ -82,7 +82,7 @@ export class UnWallet {
     message: string;
     ticketToken: string;
   }): Promise<SignResult> {
-    return new Promise((resolve, reject) => {
+    return new Promise<SignResult>((resolve, reject) => {
       if (this.xConnection.readyState !== WebSocket.OPEN) {
         reject(new UWError("CONNECTION_NOT_OPENED"));
         return;
@@ -136,7 +136,7 @@ export class UnWallet {
     data?: string;
     ticketToken: string;
   }): Promise<SendTransactionResult> {
-    return new Promise((resolve, reject) => {
+    return new Promise<SendTransactionResult>((resolve, reject) => {
       if (this.xConnection.readyState !== WebSocket.OPEN) {
         reject(new UWError("CONNECTION_NOT_OPENED"));
         return;
