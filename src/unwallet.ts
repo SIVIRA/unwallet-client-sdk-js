@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 
 import { Env, Config, UnWalletConfig, getUnWalletConfigByEnv } from "./config";
+import { EIP712TypedDataDomain, EIP712TypedDataField } from "./eip712";
 import { UWError } from "./error";
 import { XConnection } from "./x";
 
@@ -82,7 +83,7 @@ export class UnWallet {
     message: string;
     ticketToken: string;
   }): Promise<SignResult> {
-    return new Promise((resolve, reject) => {
+    return new Promise<SignResult>((resolve, reject) => {
       if (this.xConnection.readyState !== WebSocket.OPEN) {
         reject(new UWError("CONNECTION_NOT_OPENED"));
         return;
@@ -91,6 +92,8 @@ export class UnWallet {
         reject(new UWError("REQUEST_IN_PROGRESS"));
         return;
       }
+
+      const digest = ethers.sha256(ethers.toUtf8Bytes(args.message));
 
       this.xConnection.setResponseHandler({
         resolve: (resp) => {
@@ -107,7 +110,7 @@ export class UnWallet {
           }
 
           resolve({
-            digest: ethers.sha256(ethers.toUtf8Bytes(args.message)),
+            digest: digest,
             signature: resp.value,
           });
         },
@@ -129,6 +132,84 @@ export class UnWallet {
     });
   }
 
+  public signEIP712TypedData(args: {
+    typedData: {
+      types: Record<string, Array<EIP712TypedDataField>>;
+      domain: EIP712TypedDataDomain;
+      message: Record<string, any>;
+    };
+    ticketToken: string;
+  }): Promise<SignResult> {
+    return new Promise<SignResult>((resolve, reject) => {
+      if (this.xConnection.readyState !== WebSocket.OPEN) {
+        reject(new UWError("CONNECTION_NOT_OPENED"));
+        return;
+      }
+      if (this.xConnection.hasResponseHandler) {
+        reject(new UWError("REQUEST_IN_PROGRESS"));
+        return;
+      }
+
+      let digest: string;
+      {
+        try {
+          digest = ethers.TypedDataEncoder.hash(
+            args.typedData.domain,
+            args.typedData.types,
+            args.typedData.message
+          );
+        } catch (e) {
+          if (ethers.isError(e, "INVALID_ARGUMENT")) {
+            reject(
+              new UWError("INVALID_REQUEST", `invalid typed data: ${e.message}`)
+            );
+            return;
+          }
+
+          reject(e);
+          return;
+        }
+      }
+
+      this.xConnection.setResponseHandler({
+        resolve: (resp) => {
+          this.xConnection.setResponseHandler(null);
+
+          if (resp.type !== "signature") {
+            reject(
+              new UWError(
+                "INVALID_RESPONSE",
+                `unexpected response type: ${resp.type}`
+              )
+            );
+            return;
+          }
+
+          resolve({
+            digest: digest,
+            signature: resp.value,
+          });
+        },
+        reject: (err) => {
+          this.xConnection.setResponseHandler(null);
+          reject(err);
+        },
+      });
+
+      const url = new URL(
+        `${this.unWalletConfig.frontend.baseURL}/x/signEIP712TypedData`
+      );
+      {
+        url.searchParams.set("connectionID", this.xConnection.id);
+        url.searchParams.set("clientID", this.clientID);
+        url.searchParams.set("typedData", JSON.stringify(args.typedData));
+        url.searchParams.set("ticketToken", args.ticketToken);
+      }
+
+      openWindow(url);
+    });
+  }
+
   public sendTransaction(args: {
     chainID: number;
     toAddress: string;
@@ -136,7 +217,7 @@ export class UnWallet {
     data?: string;
     ticketToken: string;
   }): Promise<SendTransactionResult> {
-    return new Promise((resolve, reject) => {
+    return new Promise<SendTransactionResult>((resolve, reject) => {
       if (this.xConnection.readyState !== WebSocket.OPEN) {
         reject(new UWError("CONNECTION_NOT_OPENED"));
         return;
