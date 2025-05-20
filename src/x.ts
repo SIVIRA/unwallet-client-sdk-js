@@ -154,55 +154,42 @@ function safeParseMessageEventDataToXResponse(data: unknown):
       success: false;
       error: UWError;
     } {
-  let s: string;
-  {
-    const result = z
-      .string()
-      .refine((val) => {
+  const result = z
+    .string()
+    .refine(
+      (val) => {
         try {
           JSON.parse(val);
         } catch (e) {
           return false;
         }
         return true;
-      })
-      .safeParse(data);
-    if (!result.success) {
-      return {
-        success: false,
-        error: new UWError(
-          "INVALID_RESPONSE",
-          "message event data must be a json string"
-        ),
-      };
-    }
-
-    s = result.data;
-  }
-
-  let parsed: XResponse;
-  {
-    const result = z
-      .object({
+      },
+      {
+        abort: true,
+        message: "Invalid JSON string",
+      }
+    )
+    .transform((val) => JSON.parse(val))
+    .pipe(
+      z.object({
         type: z.enum(VALID_X_RESPONSE_TYPES),
         value: z.string(),
       })
-      .safeParse(JSON.parse(s));
-    if (!result.success) {
-      return {
-        success: false,
-        error: new UWError(
-          "INVALID_RESPONSE",
-          `invalid message event data: ${result.error.message}`
-        ),
-      };
-    }
-
-    parsed = result.data;
+    )
+    .safeParse(data);
+  if (!result.success) {
+    return {
+      success: false,
+      error: new UWError(
+        "INVALID_RESPONSE",
+        `invalid message event data: ${result.error.message}`
+      ),
+    };
   }
 
   return {
     success: true,
-    data: parsed,
+    data: result.data,
   };
 }
