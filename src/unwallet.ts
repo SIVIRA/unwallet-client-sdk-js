@@ -1,6 +1,8 @@
 import { ethers } from "ethers";
+import omit from "lodash/omit";
 
 import { Env, Config, UnWalletConfig, getUnWalletConfigByEnv } from "./config";
+import { EIP712TypedData } from "./eip712";
 import { UWError } from "./error";
 import { XConnection } from "./x";
 
@@ -92,6 +94,8 @@ export class UnWallet {
         return;
       }
 
+      const digest = ethers.sha256(ethers.toUtf8Bytes(args.message));
+
       this.xConnection.setResponseHandler({
         resolve: (resp) => {
           this.xConnection.setResponseHandler(null);
@@ -107,7 +111,7 @@ export class UnWallet {
           }
 
           resolve({
-            digest: ethers.sha256(ethers.toUtf8Bytes(args.message)),
+            digest: digest,
             signature: resp.value,
           });
         },
@@ -122,6 +126,108 @@ export class UnWallet {
         url.searchParams.set("connectionID", this.xConnection.id);
         url.searchParams.set("clientID", this.clientID);
         url.searchParams.set("message", args.message);
+        url.searchParams.set("ticketToken", args.ticketToken);
+      }
+
+      openWindow(url);
+    });
+  }
+
+  public signEIP712TypedData(args: {
+    typedData: EIP712TypedData;
+    ticketToken: string;
+  }): Promise<SignResult> {
+    return new Promise<SignResult>((resolve, reject) => {
+      if (this.xConnection.readyState !== WebSocket.OPEN) {
+        reject(new UWError("CONNECTION_NOT_OPENED"));
+        return;
+      }
+      if (this.xConnection.hasResponseHandler) {
+        reject(new UWError("REQUEST_IN_PROGRESS"));
+        return;
+      }
+
+      const types = omit(args.typedData.types, "EIP712Domain");
+
+      let primaryType: string;
+      {
+        try {
+          primaryType = ethers.TypedDataEncoder.getPrimaryType(types);
+        } catch (e) {
+          if (ethers.isError(e, "INVALID_ARGUMENT")) {
+            reject(
+              new UWError("INVALID_REQUEST", `invalid typed data: ${e.message}`)
+            );
+            return;
+          }
+
+          reject(e);
+          return;
+        }
+      }
+      if (primaryType !== args.typedData.primaryType) {
+        reject(
+          new UWError(
+            "INVALID_REQUEST",
+            `invalid typed data: primary type must be ${primaryType}`
+          )
+        );
+        return;
+      }
+
+      let digest: string;
+      {
+        try {
+          digest = ethers.TypedDataEncoder.hash(
+            args.typedData.domain,
+            types,
+            args.typedData.message
+          );
+        } catch (e) {
+          if (ethers.isError(e, "INVALID_ARGUMENT")) {
+            reject(
+              new UWError("INVALID_REQUEST", `invalid typed data: ${e.message}`)
+            );
+            return;
+          }
+
+          reject(e);
+          return;
+        }
+      }
+
+      this.xConnection.setResponseHandler({
+        resolve: (resp) => {
+          this.xConnection.setResponseHandler(null);
+
+          if (resp.type !== "signature") {
+            reject(
+              new UWError(
+                "INVALID_RESPONSE",
+                `unexpected response type: ${resp.type}`
+              )
+            );
+            return;
+          }
+
+          resolve({
+            digest: digest,
+            signature: resp.value,
+          });
+        },
+        reject: (err) => {
+          this.xConnection.setResponseHandler(null);
+          reject(err);
+        },
+      });
+
+      const url = new URL(
+        `${this.unWalletConfig.frontend.baseURL}/x/signEIP712TypedData`
+      );
+      {
+        url.searchParams.set("connectionID", this.xConnection.id);
+        url.searchParams.set("clientID", this.clientID);
+        url.searchParams.set("typedData", JSON.stringify(args.typedData));
         url.searchParams.set("ticketToken", args.ticketToken);
       }
 
