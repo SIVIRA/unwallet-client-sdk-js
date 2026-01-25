@@ -12,3 +12,7 @@ commit:
 .PHONY: build
 build:
 	pnpm tsup
+
+.PHONY: publish
+publish:
+	pnpm publish --access public --no-git-checks
