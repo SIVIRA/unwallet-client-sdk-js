@@ -58,13 +58,13 @@ export class UnWallet {
     const url = new URL(
       `${this.unWalletConfig.frontend.baseURL}/${
         args.isVirtual !== undefined ? (args.isVirtual ? "v" : "") : "v"
-      }authorize`
+      }authorize`,
     );
     {
       url.searchParams.set("response_type", "id_token");
       url.searchParams.set(
         "response_mode",
-        args.responseMode !== undefined ? args.responseMode : "fragment"
+        args.responseMode !== undefined ? args.responseMode : "fragment",
       );
       url.searchParams.set("client_id", this.clientID);
       url.searchParams.set("scope", "openid");
@@ -104,8 +104,8 @@ export class UnWallet {
             reject(
               new UWError(
                 "INVALID_RESPONSE",
-                `unexpected response type: ${resp.type}`
-              )
+                `unexpected response type: ${resp.type}`,
+              ),
             );
             return;
           }
@@ -156,7 +156,10 @@ export class UnWallet {
         } catch (e) {
           if (ethers.isError(e, "INVALID_ARGUMENT")) {
             reject(
-              new UWError("INVALID_REQUEST", `invalid typed data: ${e.message}`)
+              new UWError(
+                "INVALID_REQUEST",
+                `invalid typed data: ${e.message}`,
+              ),
             );
             return;
           }
@@ -169,8 +172,8 @@ export class UnWallet {
         reject(
           new UWError(
             "INVALID_REQUEST",
-            `invalid typed data: primary type must be ${primaryType}`
-          )
+            `invalid typed data: primary type must be ${primaryType}`,
+          ),
         );
         return;
       }
@@ -181,12 +184,15 @@ export class UnWallet {
           digest = ethers.TypedDataEncoder.hash(
             args.typedData.domain,
             types,
-            args.typedData.message
+            args.typedData.message,
           );
         } catch (e) {
           if (ethers.isError(e, "INVALID_ARGUMENT")) {
             reject(
-              new UWError("INVALID_REQUEST", `invalid typed data: ${e.message}`)
+              new UWError(
+                "INVALID_REQUEST",
+                `invalid typed data: ${e.message}`,
+              ),
             );
             return;
           }
@@ -204,8 +210,8 @@ export class UnWallet {
             reject(
               new UWError(
                 "INVALID_RESPONSE",
-                `unexpected response type: ${resp.type}`
-              )
+                `unexpected response type: ${resp.type}`,
+              ),
             );
             return;
           }
@@ -222,7 +228,7 @@ export class UnWallet {
       });
 
       const url = new URL(
-        `${this.unWalletConfig.frontend.baseURL}/x/signEIP712TypedData`
+        `${this.unWalletConfig.frontend.baseURL}/x/signEIP712TypedData`,
       );
       {
         url.searchParams.set("connectionID", this.xConnection.id);
@@ -254,7 +260,7 @@ export class UnWallet {
 
       if (args.value === undefined && args.data === undefined) {
         reject(
-          new UWError("INVALID_REQUEST", "either value or data is required")
+          new UWError("INVALID_REQUEST", "either value or data is required"),
         );
         return;
       }
@@ -267,8 +273,8 @@ export class UnWallet {
             reject(
               new UWError(
                 "INVALID_RESPONSE",
-                `unexpected response type: ${resp.type}`
-              )
+                `unexpected response type: ${resp.type}`,
+              ),
             );
             return;
           }
@@ -282,7 +288,7 @@ export class UnWallet {
       });
 
       const url = new URL(
-        `${this.unWalletConfig.frontend.baseURL}/x/sendTransaction`
+        `${this.unWalletConfig.frontend.baseURL}/x/sendTransaction`,
       );
       {
         url.searchParams.set("connectionID", this.xConnection.id);
@@ -291,11 +297,11 @@ export class UnWallet {
         url.searchParams.set("toAddress", args.toAddress);
         url.searchParams.set(
           "value",
-          args.value !== undefined ? args.value : "0x0"
+          args.value !== undefined ? args.value : "0x0",
         );
         url.searchParams.set(
           "data",
-          args.data !== undefined ? args.data : "0x"
+          args.data !== undefined ? args.data : "0x",
         );
         url.searchParams.set("ticketToken", args.ticketToken);
       }
@@ -314,6 +320,6 @@ function openWindow(url: URL): void {
   window.open(
     url.toString(),
     "_blank",
-    `width=${width},height=${height},left=${left},top=${top}`
+    `width=${width},height=${height},left=${left},top=${top}`,
   );
 }
