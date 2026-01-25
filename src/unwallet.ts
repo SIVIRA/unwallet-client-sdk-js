@@ -1,5 +1,4 @@
 import { ethers } from "ethers";
-import omit from "lodash/omit";
 
 import { Env, Config, UnWalletConfig, getUnWalletConfigByEnv } from "./config";
 import { EIP712TypedData } from "./eip712";
@@ -147,7 +146,7 @@ export class UnWallet {
         return;
       }
 
-      const types = omit(args.typedData.types, "EIP712Domain");
+      const { EIP712Domain: _, ...types } = args.typedData.types;
 
       let primaryType: string;
       {

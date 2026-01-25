@@ -33,7 +33,6 @@
   },
   "dependencies": {
     "ethers": "6.16.0",
-    "lodash": "4.17.23",
     "zod": "4.3.6"
   },
   "devDependencies": {
@@ -41,7 +40,6 @@
     "@commitlint/config-conventional": "20.3.1",
     "@commitlint/types": "20.3.1",
     "@tsconfig/strictest": "2.0.8",
-    "@types/lodash": "4.17.23",
     "commitizen": "4.3.1",
     "cz-conventional-changelog": "3.3.0",
     "husky": "9.1.7",
