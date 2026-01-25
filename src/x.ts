@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 
 import { UnWalletXAPIConfig } from "./config";
 import { UWError } from "./error";
@@ -64,8 +64,8 @@ export class XConnection {
               this.responseHandler.reject(
                 new UWError(
                   "INVALID_RESPONSE",
-                  `unexpected error response value: ${resp.value}`
-                )
+                  `unexpected error response value: ${resp.value}`,
+                ),
               );
           }
           break;
@@ -82,7 +82,7 @@ export class XConnection {
       }
 
       this.responseHandler.reject(
-        new UWError("CONNECTION_CLOSED", event.reason)
+        new UWError("CONNECTION_CLOSED", event.reason),
       );
     };
   }
@@ -105,7 +105,7 @@ export class XConnection {
     const id = await new Promise<string>((resolve, reject) => {
       setInterval(
         () => reject(new UWError("CONNECTION_TIMEOUT")),
-        config.connectionTimeout
+        config.connectionTimeout,
       );
 
       socket.onopen = () =>
@@ -126,8 +126,8 @@ export class XConnection {
           reject(
             new UWError(
               "INVALID_RESPONSE",
-              `unexpected response type: ${resp.type}`
-            )
+              `unexpected response type: ${resp.type}`,
+            ),
           );
           return;
         }
@@ -168,14 +168,14 @@ function safeParseMessageEventDataToXResponse(data: unknown):
       {
         abort: true,
         message: "Invalid JSON string",
-      }
+      },
     )
     .transform((val) => JSON.parse(val))
     .pipe(
       z.object({
         type: z.enum(VALID_X_RESPONSE_TYPES),
         value: z.string(),
-      })
+      }),
     )
     .safeParse(data);
   if (!result.success) {
@@ -183,7 +183,7 @@ function safeParseMessageEventDataToXResponse(data: unknown):
       success: false,
       error: new UWError(
         "INVALID_RESPONSE",
-        `invalid message event data: ${result.error.message}`
+        `invalid message event data: ${result.error.message}`,
       ),
     };
   }
