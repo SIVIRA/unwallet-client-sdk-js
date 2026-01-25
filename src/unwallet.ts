@@ -170,15 +170,7 @@ export class UnWallet {
         return;
       }
 
-      let digest: string;
-      {
-        try {
-          digest = hashTypedData(typedData);
-        } catch (e) {
-          reject(e);
-          return;
-        }
-      }
+      const digest = hashTypedData(typedData);
 
       this.xConnection.setResponseHandler({
         resolve: (resp) => {
