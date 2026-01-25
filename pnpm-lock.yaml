@@ -11,9 +11,6 @@ importers:
       ethers:
         specifier: 6.16.0
         version: 6.16.0
-      lodash:
-        specifier: 4.17.23
-        version: 4.17.23
       zod:
         specifier: 4.3.6
         version: 4.3.6
@@ -30,9 +27,6 @@ importers:
       '@tsconfig/strictest':
         specifier: 2.0.8
         version: 2.0.8
-      '@types/lodash':
-        specifier: 4.17.23
-        version: 4.17.23
       commitizen:
         specifier: 4.3.1
         version: 4.3.1(@types/node@25.0.10)(typescript@5.8.3)
@@ -457,9 +451,6 @@ packages:
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
-
-  '@types/lodash@4.17.23':
-    resolution: {integrity: sha512-RDvF6wTulMPjrNdCoYRC8gNR880JNGT8uB+REUpC2Ns4pRqQJhGz90wh7rgdXDPpCczF3VGktDuFGVnz8zP7HA==}
 
   '@types/node@22.7.5':
     resolution: {integrity: sha512-jML7s2NAzMWc//QSJ1a3prpk78cOPchGvXJsC3C6R6PSMoooztvRVQEz89gmBTBY1SPMaqo5teB4uNHPdetShQ==}
@@ -1711,8 +1702,6 @@ snapshots:
       '@types/node': 25.0.10
 
   '@types/estree@1.0.8': {}
-
-  '@types/lodash@4.17.23': {}
 
   '@types/node@22.7.5':
     dependencies:
