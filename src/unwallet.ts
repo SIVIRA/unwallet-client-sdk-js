@@ -1,4 +1,10 @@
-import { ethers } from "ethers";
+import {
+  ValidateTypedDataErrorType,
+  hashTypedData,
+  toBytes,
+  sha256,
+  validateTypedData,
+} from "viem";
 
 import { Env, Config, UnWalletConfig, getUnWalletConfigByEnv } from "./config";
 import { EIP712TypedData } from "./eip712";
@@ -93,7 +99,7 @@ export class UnWallet {
         return;
       }
 
-      const digest = ethers.sha256(ethers.toUtf8Bytes(args.message));
+      const digest = sha256(toBytes(args.message));
 
       this.xConnection.setResponseHandler({
         resolve: (resp) => {
@@ -146,32 +152,19 @@ export class UnWallet {
         return;
       }
 
-      const { EIP712Domain: _, ...types } = args.typedData.types;
+      const { EIP712Domain: _, ...typedDataTypes } = args.typedData.types;
+      const typedData = {
+        ...args.typedData,
+        types: typedDataTypes,
+      };
 
-      let primaryType: string;
-      {
-        try {
-          primaryType = ethers.TypedDataEncoder.getPrimaryType(types);
-        } catch (e) {
-          if (ethers.isError(e, "INVALID_ARGUMENT")) {
-            reject(
-              new UWError(
-                "INVALID_REQUEST",
-                `invalid typed data: ${e.message}`,
-              ),
-            );
-            return;
-          }
-
-          reject(e);
-          return;
-        }
-      }
-      if (primaryType !== args.typedData.primaryType) {
+      try {
+        validateTypedData(typedData);
+      } catch (e) {
         reject(
           new UWError(
             "INVALID_REQUEST",
-            `invalid typed data: primary type must be ${primaryType}`,
+            `invalid typed data: ${(e as ValidateTypedDataErrorType).message}`,
           ),
         );
         return;
@@ -180,22 +173,8 @@ export class UnWallet {
       let digest: string;
       {
         try {
-          digest = ethers.TypedDataEncoder.hash(
-            args.typedData.domain,
-            types,
-            args.typedData.message,
-          );
+          digest = hashTypedData(typedData);
         } catch (e) {
-          if (ethers.isError(e, "INVALID_ARGUMENT")) {
-            reject(
-              new UWError(
-                "INVALID_REQUEST",
-                `invalid typed data: ${e.message}`,
-              ),
-            );
-            return;
-          }
-
           reject(e);
           return;
         }
