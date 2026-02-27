@@ -1,6 +1,6 @@
 # unWallet client-side SDK
 
-[![npm version](https://badgen.net/npm/v/unwallet-client-sdk)](https://npm.im/unwallet-client-sdk)
+[![npm version](https://img.shields.io/npm/v/unwallet-client-sdk.svg?logo=npm)](https://npm.im/unwallet-client-sdk)
 
 :warning: This SDK works correctly only on web browsers.
 
