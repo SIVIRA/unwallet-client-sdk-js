@@ -22,14 +22,18 @@
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "sideEffects": false,
   "type": "module",
-  "repository": "github:SIVIRA/unwallet-client-sdk-js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SIVIRA/unwallet-client-sdk-js.git"
+  },
   "scripts": {
     "prepare": "husky"
   },
   "dependencies": {
-    "viem": "2.46.3",
-    "zod": "4.3.6"
+    "viem": "2.52.2",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@commitlint/cli": "21.0.2",
@@ -38,7 +42,8 @@
     "@tsconfig/strictest": "2.0.8",
     "czg": "1.13.1",
     "husky": "9.1.7",
-    "tsup": "8.5.1"
+    "publint": "0.3.21",
+    "tsdown": "0.22.2"
   },
   "packageManager": "pnpm@11.7.0"
 }
