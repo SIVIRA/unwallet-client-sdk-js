@@ -9,9 +9,13 @@ deps:
 commit:
 	pnpm czg
 
+.PHONY: lint
+lint:
+	pnpm publint --strict
+
 .PHONY: build
 build:
-	pnpm tsup
+	pnpm tsdown
 
 .PHONY: publish
 publish:
