@@ -3,14 +3,14 @@ import { z } from "zod";
 import { UnWalletXAPIConfig } from "./config";
 import { UWError } from "./error";
 
-export const VALID_X_RESPONSE_TYPES = [
+const X_RESPONSE_TYPES = [
   "connectionID",
   "signature",
   "transactionID",
   "error",
 ] as const;
 
-export type XResponseType = (typeof VALID_X_RESPONSE_TYPES)[number];
+export type XResponseType = (typeof X_RESPONSE_TYPES)[number];
 
 export interface XResponse {
   readonly type: XResponseType;
@@ -23,16 +23,61 @@ export interface XResponseHandler {
 }
 
 export class XConnection {
+  public readonly id: string;
+
   private socket: WebSocket;
   private responseHandler: XResponseHandler | null = null;
 
-  public readonly id: string;
-
-  constructor(args: { socket: WebSocket; id: string }) {
+  constructor(args: { id: string; socket: WebSocket }) {
     this.socket = args.socket;
     this.id = args.id;
 
     this.initListeners();
+  }
+
+  public static async init(config: UnWalletXAPIConfig): Promise<XConnection> {
+    const socket = new WebSocket(config.url);
+
+    const id = await new Promise<string>((resolve, reject) => {
+      setInterval(
+        () => reject(new UWError("CONNECTION_TIMEOUT")),
+        config.connectionTimeout,
+      );
+
+      socket.onopen = () =>
+        socket.send(JSON.stringify({ action: "getConnectionID" }));
+
+      socket.onmessage = (event) => {
+        let resp: XResponse;
+        {
+          const result = safeParseMessageEventDataToXResponse(event.data);
+          if (!result.success) {
+            reject(result.error);
+            return;
+          }
+
+          resp = result.data;
+        }
+        if (resp.type !== "connectionID") {
+          reject(
+            new UWError(
+              "INVALID_RESPONSE",
+              `unexpected response type: ${resp.type}`,
+            ),
+          );
+          return;
+        }
+
+        resolve(resp.value);
+      };
+
+      socket.onerror = () => reject(new UWError("CONNECTION_FAILED"));
+
+      socket.onclose = (event) =>
+        reject(new UWError("CONNECTION_CLOSED", event.reason));
+    });
+
+    return new XConnection({ id, socket });
   }
 
   private initListeners(): void {
@@ -98,62 +143,11 @@ export class XConnection {
   public setResponseHandler(handler: XResponseHandler | null): void {
     this.responseHandler = handler;
   }
-
-  public static async init(config: UnWalletXAPIConfig): Promise<XConnection> {
-    const socket = new WebSocket(config.url);
-
-    const id = await new Promise<string>((resolve, reject) => {
-      setInterval(
-        () => reject(new UWError("CONNECTION_TIMEOUT")),
-        config.connectionTimeout,
-      );
-
-      socket.onopen = () =>
-        socket.send(JSON.stringify({ action: "getConnectionID" }));
-
-      socket.onmessage = (event) => {
-        let resp: XResponse;
-        {
-          const result = safeParseMessageEventDataToXResponse(event.data);
-          if (!result.success) {
-            reject(result.error);
-            return;
-          }
-
-          resp = result.data;
-        }
-        if (resp.type !== "connectionID") {
-          reject(
-            new UWError(
-              "INVALID_RESPONSE",
-              `unexpected response type: ${resp.type}`,
-            ),
-          );
-          return;
-        }
-
-        resolve(resp.value);
-      };
-
-      socket.onerror = () => reject(new UWError("CONNECTION_FAILED"));
-
-      socket.onclose = (event) =>
-        reject(new UWError("CONNECTION_CLOSED", event.reason));
-    });
-
-    return new XConnection({ socket, id });
-  }
 }
 
-function safeParseMessageEventDataToXResponse(data: unknown):
-  | {
-      success: true;
-      data: XResponse;
-    }
-  | {
-      success: false;
-      error: UWError;
-    } {
+function safeParseMessageEventDataToXResponse(
+  data: unknown,
+): { success: true; data: XResponse } | { success: false; error: UWError } {
   const result = z
     .string()
     .refine(
@@ -173,7 +167,7 @@ function safeParseMessageEventDataToXResponse(data: unknown):
     .transform((val) => JSON.parse(val))
     .pipe(
       z.object({
-        type: z.enum(VALID_X_RESPONSE_TYPES),
+        type: z.enum(X_RESPONSE_TYPES),
         value: z.string(),
       }),
     )
