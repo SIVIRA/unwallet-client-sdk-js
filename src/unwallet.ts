@@ -11,13 +11,7 @@ import { EIP712TypedData } from "./eip712";
 import { UWError } from "./error";
 import { XConnection } from "./x";
 
-export const VALID_AUTHORIZATION_RESPONSE_MODES = [
-  "fragment",
-  "form_post",
-] as const;
-
-export type AuthorizationResponseMode =
-  (typeof VALID_AUTHORIZATION_RESPONSE_MODES)[number];
+export type AuthorizationResponseMode = "fragment" | "form_post";
 
 export interface SignResult {
   digest: string;
@@ -40,7 +34,7 @@ export class UnWallet {
   }
 
   public static async init(config: Config): Promise<UnWallet> {
-    const env = config.env !== undefined ? config.env : "prod";
+    const env = config.env ?? "prod";
 
     return new UnWallet({
       env: env,
@@ -67,10 +61,7 @@ export class UnWallet {
     );
     {
       url.searchParams.set("response_type", "id_token");
-      url.searchParams.set(
-        "response_mode",
-        args.responseMode !== undefined ? args.responseMode : "fragment",
-      );
+      url.searchParams.set("response_mode", args.responseMode ?? "fragment");
       url.searchParams.set("client_id", this.clientID);
       url.searchParams.set("scope", "openid");
       url.searchParams.set("redirect_uri", args.redirectURL);
@@ -265,14 +256,8 @@ export class UnWallet {
         url.searchParams.set("clientID", this.clientID);
         url.searchParams.set("chainID", args.chainID.toString());
         url.searchParams.set("toAddress", args.toAddress);
-        url.searchParams.set(
-          "value",
-          args.value !== undefined ? args.value : "0x0",
-        );
-        url.searchParams.set(
-          "data",
-          args.data !== undefined ? args.data : "0x",
-        );
+        url.searchParams.set("value", args.value ?? "0x0");
+        url.searchParams.set("data", args.data ?? "0x");
         url.searchParams.set("ticketToken", args.ticketToken);
       }
 
