@@ -7,13 +7,15 @@ import {
   test,
 } from "vitest";
 
-import { getUnWalletConfigByEnv } from "./config";
+import { UnWalletXAPIConfig } from "./config";
 import { UWError } from "./error";
 import { XActionMockArgs, mockXAPI } from "./testutil";
 import { XAction, XConnection, XResponse } from "./x";
 
-const uwConfig = getUnWalletConfigByEnv("dev");
-
+const xAPIConfig: UnWalletXAPIConfig = {
+  url: "wss://uwxapi.com",
+  connectionTimeout: 1_000,
+};
 const xConnID = "xconn";
 
 let xActionToCallCount: Record<XAction, number> = {
@@ -23,7 +25,7 @@ let xActionToCallCount: Record<XAction, number> = {
 let handleGetConnectionID: (args: XActionMockArgs) => void = () => {};
 
 const xAPIMock = mockXAPI({
-  config: uwConfig.xAPI,
+  config: xAPIConfig,
   beforeEachAction: (req) => {
     switch (req.action) {
       case "getConnectionID":
@@ -58,7 +60,7 @@ describe("XConnection.init", () => {
       );
     };
 
-    const xConn = await XConnection.init(uwConfig.xAPI);
+    const xConn = await XConnection.init(xAPIConfig);
     expect(xConn.id).toBe(xConnID);
     expect(xConn.readyState).toBe(WebSocket.OPEN);
 
@@ -75,7 +77,7 @@ describe("XConnection.init", () => {
       );
     };
 
-    await expect(XConnection.init(uwConfig.xAPI)).rejects.toThrow(
+    await expect(XConnection.init(xAPIConfig)).rejects.toThrow(
       new UWError(
         "INVALID_RESPONSE",
         "unexpected type: error (value: something went wrong)",
