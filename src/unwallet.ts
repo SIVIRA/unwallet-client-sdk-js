@@ -9,7 +9,7 @@ import {
 import { Env, Config, UnWalletConfig, getUnWalletConfigByEnv } from "./config";
 import { EIP712TypedData } from "./eip712";
 import { UWError } from "./error";
-import { XConnection } from "./x";
+import { XConnection, newUnexpectedXResponseTypeError } from "./x";
 
 export type AuthorizationResponseMode = "fragment" | "form_post";
 
@@ -97,12 +97,7 @@ export class UnWallet {
           this.xConnection.setResponseHandler(null);
 
           if (resp.type !== "signature") {
-            reject(
-              new UWError(
-                "INVALID_RESPONSE",
-                `unexpected response type: ${resp.type}`,
-              ),
-            );
+            reject(newUnexpectedXResponseTypeError(resp));
             return;
           }
 
@@ -168,12 +163,7 @@ export class UnWallet {
           this.xConnection.setResponseHandler(null);
 
           if (resp.type !== "signature") {
-            reject(
-              new UWError(
-                "INVALID_RESPONSE",
-                `unexpected response type: ${resp.type}`,
-              ),
-            );
+            reject(newUnexpectedXResponseTypeError(resp));
             return;
           }
 
@@ -231,12 +221,7 @@ export class UnWallet {
           this.xConnection.setResponseHandler(null);
 
           if (resp.type !== "transactionID") {
-            reject(
-              new UWError(
-                "INVALID_RESPONSE",
-                `unexpected response type: ${resp.type}`,
-              ),
-            );
+            reject(newUnexpectedXResponseTypeError(resp));
             return;
           }
 

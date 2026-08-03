@@ -77,12 +77,7 @@ export class XConnection {
           resp = result.data;
         }
         if (resp.type !== "connectionID") {
-          abortHandshake(
-            new UWError(
-              "INVALID_RESPONSE",
-              `unexpected response type: ${resp.type}`,
-            ),
-          );
+          abortHandshake(newUnexpectedXResponseTypeError(resp));
           return;
         }
 
@@ -204,4 +199,14 @@ function safeParseMessageEventDataToXResponse(
     success: true,
     data: result.data,
   };
+}
+
+export function newUnexpectedXResponseTypeError(resp: XResponse): UWError {
+  let msg = `unexpected response type: ${resp.type}`;
+
+  if (resp.type === "error") {
+    msg += ` (value: ${resp.value})`;
+  }
+
+  return new UWError("INVALID_RESPONSE", msg);
 }
