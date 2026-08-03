@@ -29,9 +29,8 @@ export class XConnection {
   private responseHandler: XResponseHandler | null = null;
 
   constructor(args: { id: string; socket: WebSocket }) {
-    this.socket = args.socket;
     this.id = args.id;
-
+    this.socket = args.socket;
     this.initListeners();
   }
 
