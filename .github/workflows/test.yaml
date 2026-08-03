@@ -6,6 +6,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -21,3 +23,9 @@ jobs:
         run: make deps
       - name: Test
         run: make test
+        env:
+          APP_TEST_WITH_COVERAGE: true
+      - name: Upload coverage report to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          use_oidc: true
