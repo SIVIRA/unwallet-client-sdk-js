@@ -39,10 +39,19 @@ export class XConnection {
     const socket = new WebSocket(config.url);
 
     const id = await new Promise<string>((resolve, reject) => {
-      setInterval(
-        () => reject(new UWError("CONNECTION_TIMEOUT")),
+      const timeoutID = setTimeout(
+        () => rejectWithError(new UWError("CONNECTION_TIMEOUT")),
         config.connectionTimeout,
       );
+
+      const resolveWithID = (id: string) => {
+        clearTimeout(timeoutID);
+        resolve(id);
+      };
+      const rejectWithError = (err: UWError) => {
+        clearTimeout(timeoutID);
+        reject(err);
+      };
 
       socket.onopen = () =>
         socket.send(JSON.stringify({ action: "getConnectionID" }));
@@ -52,14 +61,14 @@ export class XConnection {
         {
           const result = safeParseMessageEventDataToXResponse(event.data);
           if (!result.success) {
-            reject(result.error);
+            rejectWithError(result.error);
             return;
           }
 
           resp = result.data;
         }
         if (resp.type !== "connectionID") {
-          reject(
+          rejectWithError(
             new UWError(
               "INVALID_RESPONSE",
               `unexpected response type: ${resp.type}`,
@@ -68,13 +77,13 @@ export class XConnection {
           return;
         }
 
-        resolve(resp.value);
+        resolveWithID(resp.value);
       };
 
-      socket.onerror = () => reject(new UWError("CONNECTION_FAILED"));
+      socket.onerror = () => rejectWithError(new UWError("CONNECTION_FAILED"));
 
       socket.onclose = (event) =>
-        reject(new UWError("CONNECTION_CLOSED", event.reason));
+        rejectWithError(new UWError("CONNECTION_CLOSED", event.reason));
     });
 
     return new XConnection({ id, socket });
