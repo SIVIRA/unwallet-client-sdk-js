@@ -71,19 +71,38 @@ export type XResponseHandler = {
   reject: (err: UWError) => void;
 };
 
+export type XConnectionOptions = {
+  debugHandlers?: XConnectionDebugHandlers;
+};
+
+export type XConnectionDebugHandlers = {
+  onMessageEventDropped?: (event: MessageEvent) => void;
+  onCloseEventDropped?: (event: CloseEvent) => void;
+};
+
 export class XConnection {
   public readonly id: string;
 
-  private socket: WebSocket;
+  private readonly socket: WebSocket;
+  private readonly options: XConnectionOptions;
+
   private responseHandler: XResponseHandler | null = null;
 
-  constructor(args: { id: string; socket: WebSocket }) {
+  constructor(args: {
+    id: string;
+    socket: WebSocket;
+    options?: XConnectionOptions | undefined;
+  }) {
     this.id = args.id;
     this.socket = args.socket;
+    this.options = args.options ?? {};
     this.initListeners();
   }
 
-  public static async init(config: UnWalletXAPIConfig): Promise<XConnection> {
+  public static async init(
+    config: UnWalletXAPIConfig,
+    opts?: XConnectionOptions,
+  ): Promise<XConnection> {
     const socket = new WebSocket(config.url);
 
     const id = await new Promise<string>((resolve, reject) => {
@@ -141,7 +160,11 @@ export class XConnection {
         abortHandshake(new UWError("CONNECTION_CLOSED", event.reason));
     });
 
-    return new XConnection({ id, socket });
+    return new XConnection({
+      id,
+      socket,
+      options: opts,
+    });
   }
 
   private initListeners(): void {
@@ -149,6 +172,7 @@ export class XConnection {
 
     this.socket.onmessage = (event) => {
       if (this.responseHandler === null) {
+        this.options.debugHandlers?.onMessageEventDropped?.(event);
         return;
       }
 
@@ -187,6 +211,7 @@ export class XConnection {
 
     this.socket.onclose = (event) => {
       if (this.responseHandler === null) {
+        this.options.debugHandlers?.onCloseEventDropped?.(event);
         return;
       }
 
