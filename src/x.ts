@@ -40,16 +40,26 @@ export class XConnection {
 
     const id = await new Promise<string>((resolve, reject) => {
       const timeoutID = setTimeout(
-        () => rejectWithError(new UWError("CONNECTION_TIMEOUT")),
+        () => abortHandshake(new UWError("CONNECTION_TIMEOUT")),
         config.connectionTimeout,
       );
 
-      const resolveWithID = (id: string) => {
+      const detachListeners = () => {
+        socket.onopen = null;
+        socket.onmessage = null;
+        socket.onerror = null;
+        socket.onclose = null;
+      };
+
+      const completeHandshake = (id: string) => {
         clearTimeout(timeoutID);
+        detachListeners();
         resolve(id);
       };
-      const rejectWithError = (err: UWError) => {
+      const abortHandshake = (err: UWError) => {
         clearTimeout(timeoutID);
+        detachListeners();
+        socket.close();
         reject(err);
       };
 
@@ -61,14 +71,14 @@ export class XConnection {
         {
           const result = safeParseMessageEventDataToXResponse(event.data);
           if (!result.success) {
-            rejectWithError(result.error);
+            abortHandshake(result.error);
             return;
           }
 
           resp = result.data;
         }
         if (resp.type !== "connectionID") {
-          rejectWithError(
+          abortHandshake(
             new UWError(
               "INVALID_RESPONSE",
               `unexpected response type: ${resp.type}`,
@@ -77,13 +87,13 @@ export class XConnection {
           return;
         }
 
-        resolveWithID(resp.value);
+        completeHandshake(resp.value);
       };
 
-      socket.onerror = () => rejectWithError(new UWError("CONNECTION_FAILED"));
+      socket.onerror = () => abortHandshake(new UWError("CONNECTION_FAILED"));
 
       socket.onclose = (event) =>
-        rejectWithError(new UWError("CONNECTION_CLOSED", event.reason));
+        abortHandshake(new UWError("CONNECTION_CLOSED", event.reason));
     });
 
     return new XConnection({ id, socket });
