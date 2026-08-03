@@ -1,5 +1,3 @@
-import { ws } from "msw";
-import { setupServer } from "msw/node";
 import {
   afterAll,
   beforeAll,
@@ -8,88 +6,57 @@ import {
   expect,
   test,
 } from "vitest";
-import { z } from "zod";
 
 import { getUnWalletConfigByEnv } from "./config";
-import { XConnection } from "./x";
+import { mockXAPI } from "./testutil";
+import { XAction, XConnection } from "./x";
 
 const uwConfig = getUnWalletConfigByEnv("dev");
 
-const mockServer = setupServer();
-const mockUWXAPI = ws.link(uwConfig.xapi.url);
+const xConnID = "xconn";
 
-let actionToCallCount: Record<"getConnectionID", number> = {
+let xActionToCallCount: Record<XAction, number> = {
   getConnectionID: 0,
 };
 
+const xAPIMock = mockXAPI({
+  config: uwConfig.xAPI,
+  beforeEachAction: (req) => {
+    switch (req.action) {
+      case "getConnectionID":
+        xActionToCallCount.getConnectionID++;
+        break;
+    }
+  },
+  handleGetConnectionID: ({ client }) => {
+    client.send(
+      JSON.stringify({
+        type: "connectionID",
+        value: xConnID,
+      }),
+    );
+  },
+});
+
 beforeAll(() =>
-  mockServer.listen({
+  xAPIMock.server.listen({
     onUnhandledRequest: "error", // prevent unhandled requests from passing through to the real server
   }),
 );
 beforeEach(() => {
-  mockServer.resetHandlers();
-  actionToCallCount = {
+  xAPIMock.server.resetHandlers();
+  xActionToCallCount = {
     getConnectionID: 0,
   };
 });
-afterAll(() => mockServer.close());
+afterAll(() => xAPIMock.server.close());
 
 describe("XConnection.init", () => {
   test("success", async () => {
-    const xConnectionID = "conn";
+    const xConn = await XConnection.init(uwConfig.xAPI);
+    expect(xConn.id).toBe(xConnID);
+    expect(xConn.readyState).toBe(WebSocket.OPEN);
 
-    mockServer.use(
-      mockUWXAPI.addEventListener("connection", ({ client }) => {
-        client.addEventListener("message", (event) => {
-          {
-            const result = z
-              .string()
-              .refine(
-                (val) => {
-                  try {
-                    JSON.parse(val);
-                  } catch {
-                    return false;
-                  }
-                  return true;
-                },
-                {
-                  abort: true,
-                  message: "Invalid JSON string",
-                },
-              )
-              .transform((val) => JSON.parse(val))
-              .pipe(
-                z.object({
-                  action: z.literal("getConnectionID"),
-                }),
-              )
-              .safeParse(event.data);
-            if (!result.success) {
-              client.send(
-                JSON.stringify({
-                  type: "error",
-                  value: z.prettifyError(result.error),
-                }),
-              );
-              return;
-            }
-          }
-
-          actionToCallCount.getConnectionID++;
-
-          client.send(
-            JSON.stringify({ type: "connectionID", value: xConnectionID }),
-          );
-        });
-      }),
-    );
-
-    const xConnection = await XConnection.init(uwConfig.xapi);
-    expect(xConnection.id).toBe(xConnectionID);
-    expect(xConnection.readyState).toBe(WebSocket.OPEN);
-
-    expect(actionToCallCount.getConnectionID).toBe(1);
+    expect(xActionToCallCount.getConnectionID).toBe(1);
   });
 });

@@ -7,7 +7,7 @@ export interface Config {
 
 export interface UnWalletConfig {
   frontend: UnWalletFrontendConfig;
-  xapi: UnWalletXAPIConfig;
+  xAPI: UnWalletXAPIConfig;
 }
 
 export interface UnWalletFrontendConfig {
@@ -26,7 +26,7 @@ export function getUnWalletConfigByEnv(env: Env): UnWalletConfig {
         frontend: {
           baseURL: "https://id.unwallet.world",
         },
-        xapi: {
+        xAPI: {
           url: "wss://xapi.id.unwallet.world",
           connectionTimeout: 10_000,
         },
@@ -36,7 +36,7 @@ export function getUnWalletConfigByEnv(env: Env): UnWalletConfig {
         frontend: {
           baseURL: "http://localhost:4200",
         },
-        xapi: {
+        xAPI: {
           url: "wss://xapi.id.test.unwallet.dev",
           connectionTimeout: 10_000,
         },

@@ -39,7 +39,7 @@ export class UnWallet {
     return new UnWallet({
       env: env,
       clientID: config.clientID,
-      xConnection: await XConnection.init(getUnWalletConfigByEnv(env).xapi),
+      xConnection: await XConnection.init(getUnWalletConfigByEnv(env).xAPI),
     });
   }
 

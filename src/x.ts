@@ -3,6 +3,35 @@ import { z } from "zod";
 import { UnWalletXAPIConfig } from "./config";
 import { UWError } from "./error";
 
+const X_ACTIONS = ["getConnectionID"] as const;
+
+export type XAction = (typeof X_ACTIONS)[number];
+
+export const xRequestSchema = z.object({
+  action: z.enum(X_ACTIONS),
+});
+
+export const xRequestPayloadSchema = z
+  .string()
+  .refine(
+    (val) => {
+      try {
+        JSON.parse(val);
+      } catch {
+        return false;
+      }
+      return true;
+    },
+    {
+      abort: true,
+      message: "Invalid JSON string",
+    },
+  )
+  .transform((val) => JSON.parse(val))
+  .pipe(xRequestSchema);
+
+export type XRequest = z.infer<typeof xRequestSchema>;
+
 const X_RESPONSE_TYPES = [
   "connectionID",
   "signature",
@@ -10,17 +39,37 @@ const X_RESPONSE_TYPES = [
   "error",
 ] as const;
 
+export const xResponseSchema = z.object({
+  type: z.enum(X_RESPONSE_TYPES),
+  value: z.string(),
+});
+
+export const xResponsePayloadSchema = z
+  .string()
+  .refine(
+    (val) => {
+      try {
+        JSON.parse(val);
+      } catch (e) {
+        return false;
+      }
+      return true;
+    },
+    {
+      abort: true,
+      message: "Invalid JSON string",
+    },
+  )
+  .transform((val) => JSON.parse(val))
+  .pipe(xResponseSchema);
+
 export type XResponseType = (typeof X_RESPONSE_TYPES)[number];
+export type XResponse = z.infer<typeof xResponseSchema>;
 
-export interface XResponse {
-  readonly type: XResponseType;
-  readonly value: string;
-}
-
-export interface XResponseHandler {
+export type XResponseHandler = {
   resolve: (resp: XResponse) => void;
   reject: (err: UWError) => void;
-}
+};
 
 export class XConnection {
   public readonly id: string;
@@ -63,12 +112,14 @@ export class XConnection {
       };
 
       socket.onopen = () =>
-        socket.send(JSON.stringify({ action: "getConnectionID" }));
+        socket.send(
+          JSON.stringify({ action: "getConnectionID" } satisfies XRequest),
+        );
 
       socket.onmessage = (event) => {
         let resp: XResponse;
         {
-          const result = safeParseMessageEventDataToXResponse(event.data);
+          const result = safeParseXResponsePayload(event.data);
           if (!result.success) {
             abortHandshake(result.error);
             return;
@@ -103,7 +154,7 @@ export class XConnection {
 
       let resp: XResponse;
       {
-        const result = safeParseMessageEventDataToXResponse(event.data);
+        const result = safeParseXResponsePayload(event.data);
         if (!result.success) {
           this.responseHandler.reject(result.error);
           return;
@@ -122,7 +173,7 @@ export class XConnection {
               this.responseHandler.reject(
                 new UWError(
                   "INVALID_RESPONSE",
-                  `unexpected error response value: ${resp.value}`,
+                  `unexpected error value: ${resp.value}`,
                 ),
               );
           }
@@ -158,39 +209,16 @@ export class XConnection {
   }
 }
 
-function safeParseMessageEventDataToXResponse(
+function safeParseXResponsePayload(
   data: unknown,
 ): { success: true; data: XResponse } | { success: false; error: UWError } {
-  const result = z
-    .string()
-    .refine(
-      (val) => {
-        try {
-          JSON.parse(val);
-        } catch (e) {
-          return false;
-        }
-        return true;
-      },
-      {
-        abort: true,
-        message: "Invalid JSON string",
-      },
-    )
-    .transform((val) => JSON.parse(val))
-    .pipe(
-      z.object({
-        type: z.enum(X_RESPONSE_TYPES),
-        value: z.string(),
-      }),
-    )
-    .safeParse(data);
+  const result = xResponsePayloadSchema.safeParse(data);
   if (!result.success) {
     return {
       success: false,
       error: new UWError(
         "INVALID_RESPONSE",
-        `invalid message event data: ${result.error.message}`,
+        `invalid payload: ${z.prettifyError(result.error)}`,
       ),
     };
   }
@@ -202,7 +230,7 @@ function safeParseMessageEventDataToXResponse(
 }
 
 export function newUnexpectedXResponseTypeError(resp: XResponse): UWError {
-  let msg = `unexpected response type: ${resp.type}`;
+  let msg = `unexpected type: ${resp.type}`;
 
   if (resp.type === "error") {
     msg += ` (value: ${resp.value})`;
