@@ -13,6 +13,10 @@ commit:
 lint:
 	pnpm publint --strict
 
+.PHONY: test
+test:
+	pnpm vitest run
+
 .PHONY: build
 build:
 	pnpm tsdown
