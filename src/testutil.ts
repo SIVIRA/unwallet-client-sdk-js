@@ -2,23 +2,34 @@ import { ws, WebSocketHandlerConnection } from "msw";
 import { SetupServer, setupServer } from "msw/node";
 import { z } from "zod";
 
-import { UnWalletXAPIConfig } from "./config";
 import { xRequestPayloadSchema, XRequest } from "./x";
 
-export type XActionMockArgs = {
-  client: WebSocketHandlerConnection["client"];
-  request: XRequest;
+export type XAPIMockOptions = {
+  handlers?: XAPIMockHandlers;
 };
 
-export function mockXAPI(args: {
-  config: UnWalletXAPIConfig;
-  beforeEachAction?: (req: XRequest) => void;
-  handleGetConnectionID?: (args: XActionMockArgs) => void;
-}): {
+export type XAPIMockHandlers = {
+  beforeEachAction?: (args: {
+    client: WebSocketHandlerConnection["client"];
+    request: XRequest;
+  }) => void;
+  getConnectionID?: (args: {
+    client: WebSocketHandlerConnection["client"];
+    request: XRequest;
+  }) => void;
+  onConnectionClosed?: (args: {
+    client: WebSocketHandlerConnection["client"];
+  }) => void;
+};
+
+export function mockXAPI(
+  url: string,
+  opts?: XAPIMockOptions,
+): {
   server: SetupServer;
   sendToClient: (data: unknown) => void;
 } {
-  const interceptor = ws.link(args.config.url);
+  const interceptor = ws.link(url);
 
   let client: WebSocketHandlerConnection["client"];
 
@@ -26,12 +37,12 @@ export function mockXAPI(args: {
     interceptor.addEventListener("connection", (connection) => {
       client = connection.client;
 
-      client.addEventListener("message", (event) => {
+      connection.client.addEventListener("message", (event) => {
         let req: XRequest;
         {
           const result = xRequestPayloadSchema.safeParse(event.data);
           if (!result.success) {
-            client.send(
+            connection.client.send(
               JSON.stringify({
                 type: "error",
                 value: z.prettifyError(result.error),
@@ -43,17 +54,24 @@ export function mockXAPI(args: {
           req = result.data;
         }
 
-        args.beforeEachAction?.(req);
+        opts?.handlers?.beforeEachAction?.({
+          client: connection.client,
+          request: req,
+        });
 
         switch (req.action) {
           case "getConnectionID":
-            args.handleGetConnectionID?.({
-              client,
+            opts?.handlers?.getConnectionID?.({
+              client: connection.client,
               request: req,
             });
             break;
         }
       });
+
+      connection.client.addEventListener("close", () =>
+        opts?.handlers?.onConnectionClosed?.({ client: connection.client }),
+      );
     }),
   );
 

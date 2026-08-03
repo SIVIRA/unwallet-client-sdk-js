@@ -7,34 +7,34 @@ import {
   test,
 } from "vitest";
 
-import { UnWalletXAPIConfig } from "./config";
 import { UWError } from "./error";
-import { XActionMockArgs, mockXAPI } from "./testutil";
+import { XAPIMockHandlers, mockXAPI } from "./testutil";
 import { XAction, XConnection, XResponse } from "./x";
 
-const xAPIConfig: UnWalletXAPIConfig = {
-  url: "wss://uwxapi.com",
-  connectionTimeout: 1_000,
+const xAPIURL = "wss://uwxapi.com";
+const xAPIMockHandlers: Omit<XAPIMockHandlers, "beforeEachAction"> = {
+  getConnectionID: () => {},
+  onConnectionClosed: () => {},
 };
+const xAPIMock = mockXAPI(xAPIURL, {
+  handlers: {
+    beforeEachAction: (args) => {
+      switch (args.request.action) {
+        case "getConnectionID":
+          xActionToCallCount.getConnectionID++;
+          break;
+      }
+    },
+    getConnectionID: (args) => xAPIMockHandlers.getConnectionID?.(args),
+    onConnectionClosed: (args) => xAPIMockHandlers.onConnectionClosed?.(args),
+  },
+});
+
 const xConnID = "xconn";
 
-let xActionToCallCount: Record<XAction, number> = {
+const xActionToCallCount: Record<XAction, number> = {
   getConnectionID: 0,
 };
-
-let handleGetConnectionID: (args: XActionMockArgs) => void = () => {};
-
-const xAPIMock = mockXAPI({
-  config: xAPIConfig,
-  beforeEachAction: (req) => {
-    switch (req.action) {
-      case "getConnectionID":
-        xActionToCallCount.getConnectionID++;
-        break;
-    }
-  },
-  handleGetConnectionID: (args) => handleGetConnectionID(args),
-});
 
 beforeAll(() =>
   xAPIMock.server.listen({
@@ -43,16 +43,16 @@ beforeAll(() =>
 );
 beforeEach(() => {
   xAPIMock.server.resetHandlers();
-  xActionToCallCount = {
-    getConnectionID: 0,
-  };
+  xAPIMockHandlers.getConnectionID = () => {};
+  xAPIMockHandlers.onConnectionClosed = () => {};
+  xActionToCallCount.getConnectionID = 0;
 });
 afterAll(() => xAPIMock.server.close());
 
 describe("XConnection", () => {
   test("success: init", async () => {
-    handleGetConnectionID = ({ client }) => {
-      client.send(
+    xAPIMockHandlers.getConnectionID = (args) => {
+      args.client.send(
         JSON.stringify({
           type: "connectionID",
           value: xConnID,
@@ -60,29 +60,91 @@ describe("XConnection", () => {
       );
     };
 
-    const xConn = await XConnection.init(xAPIConfig);
+    const xConn = await XConnection.init({
+      url: xAPIURL,
+      connectionTimeout: 1_000,
+    });
     expect(xConn.id).toBe(xConnID);
     expect(xConn.readyState).toBe(WebSocket.OPEN);
 
     expect(xActionToCallCount.getConnectionID).toBe(1);
   });
 
+  test("failure: init: invalid response: invalid json string", async () => {
+    let isXConnectionClosed = false;
+
+    xAPIMockHandlers.getConnectionID = (args) =>
+      args.client.send("invalid json string");
+    xAPIMockHandlers.onConnectionClosed = () => (isXConnectionClosed = true);
+
+    await expect(
+      XConnection.init({
+        url: xAPIURL,
+        connectionTimeout: 1_000,
+      }),
+    ).rejects.toThrow(
+      new UWError("INVALID_RESPONSE", "invalid payload: ✖ Invalid JSON string"),
+    );
+
+    expect(xActionToCallCount.getConnectionID).toBe(1);
+    expect(isXConnectionClosed).toBe(true);
+  });
+
   test("failure: init: invalid response: unexpected type", async () => {
-    handleGetConnectionID = ({ client }) => {
-      client.send(
+    let isXConnectionClosed = false;
+
+    xAPIMockHandlers.getConnectionID = (args) => {
+      args.client.send(
         JSON.stringify({
           type: "error",
           value: "something went wrong",
         } satisfies XResponse),
       );
     };
+    xAPIMockHandlers.onConnectionClosed = () => (isXConnectionClosed = true);
 
-    await expect(XConnection.init(xAPIConfig)).rejects.toThrow(
+    await expect(
+      XConnection.init({
+        url: xAPIURL,
+        connectionTimeout: 1_000,
+      }),
+    ).rejects.toThrow(
       new UWError(
         "INVALID_RESPONSE",
         "unexpected type: error (value: something went wrong)",
       ),
     );
+
+    expect(xActionToCallCount.getConnectionID).toBe(1);
+    expect(isXConnectionClosed).toBe(true);
+  });
+
+  test("failure: init: connection timeout", async () => {
+    let isXConnectionClosed = false;
+
+    xAPIMockHandlers.onConnectionClosed = () => (isXConnectionClosed = true);
+
+    await expect(
+      XConnection.init({
+        url: xAPIURL,
+        connectionTimeout: 100,
+      }),
+    ).rejects.toThrow(new UWError("CONNECTION_TIMEOUT"));
+
+    expect(xActionToCallCount.getConnectionID).toBe(1);
+    expect(isXConnectionClosed).toBe(true);
+  });
+
+  test("failure: init: connection closed", async () => {
+    xAPIMockHandlers.getConnectionID = (args) =>
+      args.client.close(undefined, "something went wrong");
+
+    await expect(
+      XConnection.init({
+        url: xAPIURL,
+        connectionTimeout: 1_000,
+      }),
+    ).rejects.toThrow(new UWError("CONNECTION_CLOSED", "something went wrong"));
 
     expect(xActionToCallCount.getConnectionID).toBe(1);
   });
