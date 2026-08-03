@@ -49,8 +49,8 @@ beforeEach(() => {
 });
 afterAll(() => xAPIMock.server.close());
 
-describe("XConnection.init", () => {
-  test("success", async () => {
+describe("XConnection", () => {
+  test("success: init", async () => {
     handleGetConnectionID = ({ client }) => {
       client.send(
         JSON.stringify({
@@ -67,7 +67,7 @@ describe("XConnection.init", () => {
     expect(xActionToCallCount.getConnectionID).toBe(1);
   });
 
-  test("failure: invalid response: unexpected type", async () => {
+  test("failure: init: invalid response: unexpected type", async () => {
     handleGetConnectionID = ({ client }) => {
       client.send(
         JSON.stringify({
