@@ -157,7 +157,7 @@ export class XConnection {
       socket.onerror = () => abortHandshake(new UWError("CONNECTION_FAILED"));
 
       socket.onclose = (event) =>
-        abortHandshake(new UWError("CONNECTION_CLOSED", event.reason));
+        abortHandshake(newConnectionClosedError(event));
     });
 
     return new XConnection({
@@ -215,9 +215,7 @@ export class XConnection {
         return;
       }
 
-      this.responseHandler.reject(
-        new UWError("CONNECTION_CLOSED", event.reason),
-      );
+      this.responseHandler.reject(newConnectionClosedError(event));
     };
   }
 
@@ -231,6 +229,10 @@ export class XConnection {
 
   public setResponseHandler(handler: XResponseHandler | null): void {
     this.responseHandler = handler;
+  }
+
+  public close(): void {
+    this.socket.close();
   }
 }
 
@@ -262,4 +264,11 @@ export function newUnexpectedXResponseTypeError(resp: XResponse): UWError {
   }
 
   return new UWError("INVALID_RESPONSE", msg);
+}
+
+export function newConnectionClosedError(event: CloseEvent): UWError {
+  return new UWError(
+    "CONNECTION_CLOSED",
+    event.reason.length > 0 ? event.reason : undefined,
+  );
 }
