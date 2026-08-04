@@ -249,6 +249,10 @@ export class UnWallet {
       openWindow(url);
     });
   }
+
+  public close(): void {
+    this.xConnection.close();
+  }
 }
 
 function openWindow(url: URL): void {

@@ -12,6 +12,8 @@ import { UWError } from "./error";
 import { XAPIMockHandlers, mockXAPI, randomBytesHex } from "./testutil";
 import { XAction, XConnection, XConnectionOptions, XResponse } from "./x";
 
+const xConnID = "xconn";
+
 const xAPIURL = "wss://uwxapi.com";
 const xAPIMockHandlers: Omit<XAPIMockHandlers, "beforeEachAction"> = {
   getConnectionID: () => {},
@@ -30,8 +32,6 @@ const xAPIMock = mockXAPI(xAPIURL, {
     onConnectionClosed: (args) => xAPIMockHandlers.onConnectionClosed?.(args),
   },
 });
-
-const xConnID = "xconn";
 
 const xActionToCallCount: Record<XAction, number> = {
   getConnectionID: 0,
@@ -73,7 +73,7 @@ afterAll(() => xAPIMock.server.close());
 
 describe("XConnection", () => {
   describe("init", () => {
-    it("resolves", async () => {
+    it("resolves with the connection id", async () => {
       xAPIMockHandlers.getConnectionID = (args) => {
         args.client.send(
           JSON.stringify({
@@ -93,7 +93,7 @@ describe("XConnection", () => {
       expect(xActionToCallCount.getConnectionID).toBe(1);
     });
 
-    it("rejects on invalid response: invalid payload", async () => {
+    it("rejects on an invalid response: invalid payload", async () => {
       let isXConnectionClosed = false;
 
       xAPIMockHandlers.getConnectionID = (args) =>
@@ -116,7 +116,7 @@ describe("XConnection", () => {
       expect(isXConnectionClosed).toBe(true);
     });
 
-    it("rejects on invalid response: unexpected type: signature", async () => {
+    it("rejects on an invalid response: unexpected type: signature", async () => {
       let isXConnectionClosed = false;
 
       xAPIMockHandlers.getConnectionID = (args) => {
@@ -142,7 +142,7 @@ describe("XConnection", () => {
       expect(isXConnectionClosed).toBe(true);
     });
 
-    it("rejects on invalid response: unexpected type: error", async () => {
+    it("rejects on an invalid response: unexpected type: error", async () => {
       let isXConnectionClosed = false;
 
       xAPIMockHandlers.getConnectionID = (args) => {
@@ -171,7 +171,7 @@ describe("XConnection", () => {
       expect(isXConnectionClosed).toBe(true);
     });
 
-    it("rejects on connection timeout", async () => {
+    it("rejects on a connection timeout", async () => {
       let isXConnectionClosed = false;
 
       xAPIMockHandlers.onConnectionClosed = () => (isXConnectionClosed = true);
@@ -187,7 +187,7 @@ describe("XConnection", () => {
       expect(isXConnectionClosed).toBe(true);
     });
 
-    it("rejects on connection closed", async () => {
+    it("rejects on a closed connection", async () => {
       xAPIMockHandlers.getConnectionID = (args) =>
         args.client.close(undefined, "something went wrong");
 
@@ -205,7 +205,7 @@ describe("XConnection", () => {
   });
 
   describe("handle response", () => {
-    it("resolves with signature", async () => {
+    it("resolves with a signature", async () => {
       const xConn = await initXConnection();
       const waitXResp = new Promise<XResponse>((resolve, reject) => {
         xConn.setResponseHandler({ resolve, reject });
@@ -221,7 +221,7 @@ describe("XConnection", () => {
       await expect(waitXResp).resolves.toEqual(xResp);
     });
 
-    it("resolves with transaction id", async () => {
+    it("resolves with a transaction id", async () => {
       const xConn = await initXConnection();
       const waitXResp = new Promise<XResponse>((resolve, reject) => {
         xConn.setResponseHandler({ resolve, reject });
@@ -237,7 +237,7 @@ describe("XConnection", () => {
       await expect(waitXResp).resolves.toEqual(xResp);
     });
 
-    it("ignores message event", async () => {
+    it("ignores a message event", async () => {
       let isMessageEventDropped = false;
 
       const xConn = await initXConnection({
@@ -257,7 +257,7 @@ describe("XConnection", () => {
       await vi.waitUntil(() => isMessageEventDropped);
     });
 
-    it("rejects on invalid response: invalid payload", async () => {
+    it("rejects on an invalid response: invalid payload", async () => {
       const xConn = await initXConnection();
       const waitXResp = new Promise<XResponse>((resolve, reject) => {
         xConn.setResponseHandler({ resolve, reject });
@@ -273,7 +273,7 @@ describe("XConnection", () => {
       );
     });
 
-    it("rejects on error: rejected", async () => {
+    it("rejects on an error response: rejected", async () => {
       const xConn = await initXConnection();
       const waitXResp = new Promise<XResponse>((resolve, reject) => {
         xConn.setResponseHandler({ resolve, reject });
@@ -289,7 +289,7 @@ describe("XConnection", () => {
       await expect(waitXResp).rejects.toThrow(new UWError("REQUEST_REJECTED"));
     });
 
-    it("rejects on error: unexpected value", async () => {
+    it("rejects on an error response: unexpected value", async () => {
       const xConn = await initXConnection();
       const waitXResp = new Promise<XResponse>((resolve, reject) => {
         xConn.setResponseHandler({ resolve, reject });
@@ -310,7 +310,7 @@ describe("XConnection", () => {
       );
     });
 
-    it("ignores close event", async () => {
+    it("ignores a close event", async () => {
       let isCloseEventDropped = false;
 
       const xConn = await initXConnection({
@@ -325,7 +325,7 @@ describe("XConnection", () => {
       await vi.waitUntil(() => isCloseEventDropped);
     });
 
-    it("rejects on connection closed", async () => {
+    it("rejects on a closed connection", async () => {
       const xConn = await initXConnection();
       const waitXResp = new Promise<XResponse>((resolve, reject) => {
         xConn.setResponseHandler({ resolve, reject });
@@ -336,6 +336,32 @@ describe("XConnection", () => {
       await expect(waitXResp).rejects.toThrow(
         new UWError("CONNECTION_CLOSED", "something went wrong"),
       );
+    });
+  });
+
+  describe("close", () => {
+    it("closes the connection", async () => {
+      let isXConnectionClosed = false;
+
+      xAPIMockHandlers.onConnectionClosed = () => (isXConnectionClosed = true);
+
+      const xConn = await initXConnection();
+
+      xConn.close();
+
+      await vi.waitUntil(() => isXConnectionClosed);
+      await vi.waitUntil(() => xConn.readyState === WebSocket.CLOSED);
+    });
+
+    it("rejects the pending response handler", async () => {
+      const xConn = await initXConnection();
+      const waitXResp = new Promise<XResponse>((resolve, reject) => {
+        xConn.setResponseHandler({ resolve, reject });
+      });
+
+      xConn.close();
+
+      await expect(waitXResp).rejects.toThrow(new UWError("CONNECTION_CLOSED"));
     });
   });
 });
