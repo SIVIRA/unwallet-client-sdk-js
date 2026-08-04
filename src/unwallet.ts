@@ -56,7 +56,7 @@ export class UnWallet {
   }): void {
     const url = new URL(
       `${this.unWalletConfig.frontend.baseURL}/${
-        args.isVirtual !== undefined ? (args.isVirtual ? "v" : "") : "v"
+        args.isVirtual === false ? "" : "v"
       }authorize`,
     );
     {
