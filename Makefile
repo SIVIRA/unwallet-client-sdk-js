@@ -1,3 +1,7 @@
+ifeq ($(APP_TEST_WITH_COVERAGE), true)
+APP_TEST_FLAG := --coverage
+endif
+
 .PHONY: setup
 setup: deps
 
@@ -12,6 +16,10 @@ commit:
 .PHONY: lint
 lint:
 	pnpm publint --strict
+
+.PHONY: test
+test:
+	pnpm vitest run $(APP_TEST_FLAG)
 
 .PHONY: build
 build:
