@@ -1,7 +1,7 @@
 import {
   afterAll,
+  afterEach,
   beforeAll,
-  beforeEach,
   describe,
   expect,
   it,
@@ -63,10 +63,12 @@ beforeAll(() =>
     onUnhandledRequest: "error", // prevent unhandled requests from passing through to the real server
   }),
 );
-beforeEach(() => {
-  xAPIMock.server.resetHandlers();
+afterEach(() => {
   xAPIMockHandlers.getConnectionID = () => {};
   xAPIMockHandlers.onConnectionClosed = () => {};
+
+  xAPIMock.server.resetHandlers();
+
   xActionToCallCount.getConnectionID = 0;
 });
 afterAll(() => xAPIMock.server.close());
