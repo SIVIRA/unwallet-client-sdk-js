@@ -1,5 +1,6 @@
-import { ws, WebSocketHandlerConnection } from "msw";
+import { ws, WebSocketData, WebSocketHandlerConnection } from "msw";
 import { SetupServer, setupServer } from "msw/node";
+import { ByteArray, bytesToHex } from "viem";
 import { z } from "zod";
 
 import { xRequestPayloadSchema, XRequest } from "./x";
@@ -27,7 +28,8 @@ export function mockXAPI(
   opts?: XAPIMockOptions,
 ): {
   server: SetupServer;
-  sendToClient: (data: unknown) => void;
+  sendToClient: (data: WebSocketData) => void;
+  closeClient: (code?: number, reason?: string) => void;
 } {
   const interceptor = ws.link(url);
 
@@ -77,6 +79,15 @@ export function mockXAPI(
 
   return {
     server,
-    sendToClient: (data: unknown) => client.send(JSON.stringify(data)),
+    sendToClient: (data: WebSocketData) => client.send(data),
+    closeClient: (code?: number, reason?: string) => client.close(code, reason),
   };
+}
+
+export function randomBytes(length: number): ByteArray {
+  return crypto.getRandomValues(new Uint8Array(length));
+}
+
+export function randomBytesHex(length: number): string {
+  return bytesToHex(randomBytes(length));
 }
