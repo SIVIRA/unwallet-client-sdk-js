@@ -1,5 +1,5 @@
 import {
-  ValidateTypedDataErrorType,
+  BaseError,
   hashTypedData,
   toBytes,
   sha256,
@@ -150,7 +150,7 @@ export class UnWallet {
         reject(
           new UWError(
             "INVALID_REQUEST",
-            `invalid typed data: ${(e as ValidateTypedDataErrorType).message}`,
+            `invalid typed data: ${e instanceof BaseError ? e.shortMessage : String(e)}`,
           ),
         );
         return;
