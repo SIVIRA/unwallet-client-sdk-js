@@ -1,6 +1,6 @@
 import { ws, WebSocketData, WebSocketHandlerConnection } from "msw";
 import { SetupServer, setupServer } from "msw/node";
-import { ByteArray, bytesToHex } from "viem";
+import { ByteArray, Hex, bytesToHex, toBytes } from "viem";
 import { z } from "zod";
 
 import { xRequestPayloadSchema, XRequest } from "./x";
@@ -22,6 +22,13 @@ export type XAPIMockHandlers = {
     client: WebSocketHandlerConnection["client"];
   }) => void;
 };
+
+export function base64URLEncode(s: string): string {
+  return btoa(String.fromCharCode(...toBytes(s)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
 
 export function mockXAPI(
   url: string,
@@ -88,6 +95,6 @@ export function randomBytes(length: number): ByteArray {
   return crypto.getRandomValues(new Uint8Array(length));
 }
 
-export function randomBytesHex(length: number): string {
+export function randomBytesHex(length: number): Hex {
   return bytesToHex(randomBytes(length));
 }

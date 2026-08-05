@@ -1,5 +1,5 @@
 import {
-  ValidateTypedDataErrorType,
+  BaseError,
   hashTypedData,
   toBytes,
   sha256,
@@ -56,7 +56,7 @@ export class UnWallet {
   }): void {
     const url = new URL(
       `${this.unWalletConfig.frontend.baseURL}/${
-        args.isVirtual !== undefined ? (args.isVirtual ? "v" : "") : "v"
+        args.isVirtual === false ? "" : "v"
       }authorize`,
     );
     {
@@ -150,7 +150,7 @@ export class UnWallet {
         reject(
           new UWError(
             "INVALID_REQUEST",
-            `invalid typed data: ${(e as ValidateTypedDataErrorType).message}`,
+            `invalid typed data: ${e instanceof BaseError ? e.shortMessage : String(e)}`,
           ),
         );
         return;

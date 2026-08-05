@@ -1,3 +1,4 @@
+import { Hex } from "viem";
 import {
   afterAll,
   afterEach,
@@ -9,17 +10,37 @@ import {
 } from "vitest";
 
 import { UWError } from "./error";
-import { XAPIMockHandlers, mockXAPI, randomBytesHex } from "./testutil";
+import {
+  XAPIMockHandlers,
+  base64URLEncode,
+  mockXAPI,
+  randomBytesHex,
+} from "./testutil";
 import { XAction, XConnection, XConnectionOptions, XResponse } from "./x";
 
-const xConnID = "xconn";
+const dummy = ((): {
+  xAPIURL: string;
 
-const xAPIURL = "wss://uwxapi.com";
+  xConnID: string;
+
+  sig: Hex;
+  txID: string;
+} => {
+  return {
+    xAPIURL: "wss://uwxapi.com",
+
+    xConnID: "xconn",
+
+    sig: randomBytesHex(65),
+    txID: base64URLEncode("Transaction:1"),
+  };
+})();
+
 const xAPIMockHandlers: Omit<XAPIMockHandlers, "beforeEachAction"> = {
   getConnectionID: () => {},
   onConnectionClosed: () => {},
 };
-const xAPIMock = mockXAPI(xAPIURL, {
+const xAPIMock = mockXAPI(dummy.xAPIURL, {
   handlers: {
     beforeEachAction: (args) => {
       switch (args.request.action) {
@@ -44,14 +65,14 @@ async function initXConnection(
     args.client.send(
       JSON.stringify({
         type: "connectionID",
-        value: xConnID,
+        value: dummy.xConnID,
       } satisfies XResponse),
     );
   };
 
   return await XConnection.init(
     {
-      url: xAPIURL,
+      url: dummy.xAPIURL,
       connectionTimeout: 1_000,
     },
     opts,
@@ -80,16 +101,16 @@ describe("XConnection", () => {
         args.client.send(
           JSON.stringify({
             type: "connectionID",
-            value: xConnID,
+            value: dummy.xConnID,
           } satisfies XResponse),
         );
       };
 
       const xConn = await XConnection.init({
-        url: xAPIURL,
+        url: dummy.xAPIURL,
         connectionTimeout: 1_000,
       });
-      expect(xConn.id).toBe(xConnID);
+      expect(xConn.id).toBe(dummy.xConnID);
       expect(xConn.readyState).toBe(WebSocket.OPEN);
 
       expect(xActionToCallCount.getConnectionID).toBe(1);
@@ -104,7 +125,7 @@ describe("XConnection", () => {
 
       await expect(
         XConnection.init({
-          url: xAPIURL,
+          url: dummy.xAPIURL,
           connectionTimeout: 1_000,
         }),
       ).rejects.toThrow(
@@ -125,7 +146,7 @@ describe("XConnection", () => {
         args.client.send(
           JSON.stringify({
             type: "signature",
-            value: randomBytesHex(65),
+            value: dummy.sig,
           } satisfies XResponse),
         );
       };
@@ -133,7 +154,7 @@ describe("XConnection", () => {
 
       await expect(
         XConnection.init({
-          url: xAPIURL,
+          url: dummy.xAPIURL,
           connectionTimeout: 1_000,
         }),
       ).rejects.toThrow(
@@ -159,7 +180,7 @@ describe("XConnection", () => {
 
       await expect(
         XConnection.init({
-          url: xAPIURL,
+          url: dummy.xAPIURL,
           connectionTimeout: 1_000,
         }),
       ).rejects.toThrow(
@@ -180,7 +201,7 @@ describe("XConnection", () => {
 
       await expect(
         XConnection.init({
-          url: xAPIURL,
+          url: dummy.xAPIURL,
           connectionTimeout: 100,
         }),
       ).rejects.toThrow(new UWError("CONNECTION_TIMEOUT"));
@@ -195,7 +216,7 @@ describe("XConnection", () => {
 
       await expect(
         XConnection.init({
-          url: xAPIURL,
+          url: dummy.xAPIURL,
           connectionTimeout: 1_000,
         }),
       ).rejects.toThrow(
@@ -215,7 +236,7 @@ describe("XConnection", () => {
 
       const xResp = {
         type: "signature",
-        value: randomBytesHex(65),
+        value: dummy.sig,
       } satisfies XResponse;
 
       xAPIMock.sendToClient(JSON.stringify(xResp));
@@ -231,7 +252,7 @@ describe("XConnection", () => {
 
       const xResp = {
         type: "transactionID",
-        value: randomBytesHex(32),
+        value: dummy.txID,
       } satisfies XResponse;
 
       xAPIMock.sendToClient(JSON.stringify(xResp));
@@ -252,7 +273,7 @@ describe("XConnection", () => {
       xAPIMock.sendToClient(
         JSON.stringify({
           type: "signature",
-          value: randomBytesHex(65),
+          value: dummy.sig,
         } satisfies XResponse),
       );
 
