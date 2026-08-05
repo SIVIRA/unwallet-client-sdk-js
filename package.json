@@ -44,10 +44,10 @@
     "czg": "1.13.1",
     "husky": "9.1.7",
     "msw": "2.15.0",
-    "publint": "0.3.22",
+    "publint": "0.3.23",
     "tsdown": "0.22.14",
     "typescript": "7.0.2",
     "vitest": "4.1.10"
   },
-  "packageManager": "pnpm@11.18.0"
+  "packageManager": "pnpm@11.20.0"
 }
