@@ -24,7 +24,7 @@ jobs:
       - name: Test
         run: make test
         env:
-          APP_TEST_WITH_COVERAGE: true
+          APP_TEST_FLAGS: --coverage
       - name: Upload coverage report to Codecov
         uses: codecov/codecov-action@v7
         with:
