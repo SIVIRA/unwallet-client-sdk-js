@@ -1,4 +1,4 @@
-import { sha256, toBytes } from "viem";
+import { hashTypedData, sha256, toBytes } from "viem";
 import {
   afterAll,
   afterEach,
@@ -12,6 +12,7 @@ import {
 import { z } from "zod";
 
 import { getUnWalletConfigByEnv } from "./config";
+import { EIP712TypedData } from "./eip712";
 import { UWError } from "./error";
 import { mockXAPI, randomBytesHex } from "./testutil";
 import { SignResult, UnWallet } from "./unwallet";
@@ -48,6 +49,49 @@ const clientID = "C00000000000000000000000000000000";
 
 const messageToBeSigned = "message to be signed";
 const digestOfMessageToBeSigned = sha256(toBytes(messageToBeSigned));
+
+// from https://eips.ethereum.org/assets/eip-712/Example.js
+const eip712TypedDataToBeSigned: EIP712TypedData = {
+  types: {
+    EIP712Domain: [
+      { name: "name", type: "string" },
+      { name: "version", type: "string" },
+      { name: "chainId", type: "uint256" },
+      { name: "verifyingContract", type: "address" },
+    ],
+    Person: [
+      { name: "name", type: "string" },
+      { name: "wallet", type: "address" },
+    ],
+    Mail: [
+      { name: "from", type: "Person" },
+      { name: "to", type: "Person" },
+      { name: "contents", type: "string" },
+    ],
+  },
+  primaryType: "Mail",
+  domain: {
+    name: "Ether Mail",
+    version: "1",
+    chainId: 1,
+    verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+  },
+  message: {
+    from: {
+      name: "Cow",
+      wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
+    },
+    to: {
+      name: "Bob",
+      wallet: "0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB",
+    },
+    contents: "Hello, Bob!",
+  },
+};
+const digestOfEIP712TypedDataToBeSigned = hashTypedData(
+  eip712TypedDataToBeSigned,
+);
+
 const ticketToken = randomBytesHex(32);
 
 beforeAll(() =>
@@ -65,6 +109,7 @@ afterEach(() => {
   vi.clearAllMocks();
 
   xAPIMock.server.resetHandlers();
+  xAPIMock.closeClient();
 });
 afterAll(() => xAPIMock.server.close());
 
@@ -220,8 +265,7 @@ describe("UnWallet", () => {
     it("rejects on a request in progress", async () => {
       const uw = await UnWallet.init({ env, clientID });
 
-      uw.sign({ message: messageToBeSigned, ticketToken });
-
+      const waitToSign = uw.sign({ message: messageToBeSigned, ticketToken });
       const waitToSignAgain = uw.sign({
         message: messageToBeSigned,
         ticketToken,
@@ -232,6 +276,12 @@ describe("UnWallet", () => {
       );
 
       expect(windowMock.open).toHaveBeenCalledTimes(1);
+
+      uw.close();
+
+      await expect(waitToSign).rejects.toThrow(
+        new UWError("CONNECTION_CLOSED"),
+      );
     });
 
     it("rejects on an invalid response: unexpected type: transaction id", async () => {
@@ -292,6 +342,197 @@ describe("UnWallet", () => {
       await expect(waitToSignAgain).resolves.toEqual({
         digest: digestOfMessageToBeSigned,
         signature: signature,
+      } satisfies SignResult);
+
+      expect(windowMock.open).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("signEIP712TypedData", () => {
+    it("resolves the first request, then accepts the second request", async () => {
+      const signature = randomBytesHex(65);
+
+      const uw = await UnWallet.init({ env, clientID });
+
+      const waitToSignEIP712TypedData = uw.signEIP712TypedData({
+        typedData: eip712TypedDataToBeSigned,
+        ticketToken,
+      });
+
+      let windowURL: URL;
+      {
+        const result = safeParseOpenedWindowURLInMockCalls();
+        if (!result.success) {
+          expect.fail(z.prettifyError(result.error));
+        }
+
+        windowURL = result.data;
+      }
+      expect(windowURL.origin + windowURL.pathname).toBe(
+        `${uwConfig.frontend.baseURL}/x/signEIP712TypedData`,
+      );
+      expect(Object.fromEntries(windowURL.searchParams)).toEqual({
+        connectionID: xConnID,
+        clientID,
+        typedData: JSON.stringify(eip712TypedDataToBeSigned),
+        ticketToken,
+      });
+
+      xAPIMock.sendToClient(
+        JSON.stringify({
+          type: "signature",
+          value: signature,
+        } satisfies XResponse),
+      );
+
+      await expect(waitToSignEIP712TypedData).resolves.toEqual({
+        digest: digestOfEIP712TypedDataToBeSigned,
+        signature,
+      } satisfies SignResult);
+
+      const waitToSignEIP712TypedDataAgain = uw.signEIP712TypedData({
+        typedData: eip712TypedDataToBeSigned,
+        ticketToken,
+      });
+
+      xAPIMock.sendToClient(
+        JSON.stringify({
+          type: "signature",
+          value: signature,
+        } satisfies XResponse),
+      );
+
+      await expect(waitToSignEIP712TypedDataAgain).resolves.toEqual({
+        digest: digestOfEIP712TypedDataToBeSigned,
+        signature,
+      } satisfies SignResult);
+
+      expect(windowMock.open).toHaveBeenCalledTimes(2);
+    });
+
+    it("rejects on an unopened connection", async () => {
+      const uw = await UnWallet.init({ env, clientID });
+
+      uw.close();
+
+      const waitToSignEIP712TypedData = uw.signEIP712TypedData({
+        typedData: eip712TypedDataToBeSigned,
+        ticketToken,
+      });
+
+      await expect(waitToSignEIP712TypedData).rejects.toThrow(
+        new UWError("CONNECTION_NOT_OPENED"),
+      );
+
+      expect(windowMock.open).not.toHaveBeenCalled();
+    });
+
+    it("rejects on a request in progress", async () => {
+      const uw = await UnWallet.init({ env, clientID });
+
+      const waitToSignEIP712TypedData = uw.signEIP712TypedData({
+        typedData: eip712TypedDataToBeSigned,
+        ticketToken,
+      });
+      const waitToSignEIP712TypedDataAgain = uw.signEIP712TypedData({
+        typedData: eip712TypedDataToBeSigned,
+        ticketToken,
+      });
+
+      await expect(waitToSignEIP712TypedDataAgain).rejects.toThrow(
+        new UWError("REQUEST_IN_PROGRESS"),
+      );
+
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
+      uw.close();
+
+      await expect(waitToSignEIP712TypedData).rejects.toThrow(
+        new UWError("CONNECTION_CLOSED"),
+      );
+    });
+
+    it("rejects on an invalid request: invalid typed data", async () => {
+      const uw = await UnWallet.init({ env, clientID });
+
+      const waitToSignEIP712TypedData = uw.signEIP712TypedData({
+        typedData: {
+          ...eip712TypedDataToBeSigned,
+          primaryType: "InvalidPrimaryType",
+        },
+        ticketToken,
+      });
+
+      await expect(waitToSignEIP712TypedData).rejects.toThrow(
+        new UWError(
+          "INVALID_REQUEST",
+          'invalid typed data: Invalid primary type `InvalidPrimaryType` must be one of `["Person","Mail"]`.',
+        ),
+      );
+
+      expect(windowMock.open).not.toHaveBeenCalled();
+    });
+
+    it("rejects on an invalid response: unexpected type: transaction id", async () => {
+      const uw = await UnWallet.init({ env, clientID });
+
+      const waitToSignEIP712TypedData = uw.signEIP712TypedData({
+        typedData: eip712TypedDataToBeSigned,
+        ticketToken,
+      });
+
+      xAPIMock.sendToClient(
+        JSON.stringify({
+          type: "transactionID",
+          value: randomBytesHex(32),
+        } satisfies XResponse),
+      );
+
+      await expect(waitToSignEIP712TypedData).rejects.toThrow(
+        new UWError("INVALID_RESPONSE", "unexpected type: transactionID"),
+      );
+
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+    });
+
+    it("rejects the first request, then accepts the second request", async () => {
+      const signature = randomBytesHex(65);
+
+      const uw = await UnWallet.init({ env, clientID });
+
+      const waitToSignEIP712TypedData = uw.signEIP712TypedData({
+        typedData: eip712TypedDataToBeSigned,
+        ticketToken,
+      });
+
+      xAPIMock.sendToClient(
+        JSON.stringify({
+          type: "error",
+          value: "rejected",
+        } satisfies XResponse),
+      );
+
+      await expect(waitToSignEIP712TypedData).rejects.toThrow(
+        new UWError("REQUEST_REJECTED"),
+      );
+
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
+      const waitToSignEIP712TypedDataAgain = uw.signEIP712TypedData({
+        typedData: eip712TypedDataToBeSigned,
+        ticketToken,
+      });
+
+      xAPIMock.sendToClient(
+        JSON.stringify({
+          type: "signature",
+          value: signature,
+        } satisfies XResponse),
+      );
+
+      await expect(waitToSignEIP712TypedDataAgain).resolves.toEqual({
+        digest: digestOfEIP712TypedDataToBeSigned,
+        signature,
       } satisfies SignResult);
 
       expect(windowMock.open).toHaveBeenCalledTimes(2);
