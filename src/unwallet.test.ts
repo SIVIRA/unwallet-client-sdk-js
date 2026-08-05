@@ -1,4 +1,13 @@
-import { Hex, hashTypedData, sha256, toBytes } from "viem";
+import {
+  Address,
+  ByteArray,
+  Hex,
+  hashTypedData,
+  parseEther,
+  sha256,
+  toBytes,
+  toHex,
+} from "viem";
 import {
   afterAll,
   afterEach,
@@ -14,8 +23,13 @@ import { z } from "zod";
 import { getUnWalletConfigByEnv } from "./config";
 import { EIP712TypedData } from "./eip712";
 import { UWError } from "./error";
-import { base64URLEncode, mockXAPI, randomBytesHex } from "./testutil";
-import { SignResult, UnWallet } from "./unwallet";
+import {
+  base64URLEncode,
+  mockXAPI,
+  randomBytes,
+  randomBytesHex,
+} from "./testutil";
+import { SendTransactionResult, SignResult, UnWallet } from "./unwallet";
 import { XResponse } from "./x";
 
 const env = "dev";
@@ -41,6 +55,9 @@ const dummy = ((): {
   sig: Hex;
 
   txID: string;
+  txToAddress: Address;
+  txValue: bigint;
+  txData: ByteArray;
 } => {
   const msg = "message to be signed";
 
@@ -101,7 +118,11 @@ const dummy = ((): {
     ticketToken: randomBytesHex(32),
 
     sig: randomBytesHex(65),
+
     txID: base64URLEncode("Transaction:1"),
+    txToAddress: "0x0000000000000000000000000000000000000001",
+    txValue: parseEther("1"),
+    txData: randomBytes(32),
   };
 })();
 
@@ -158,6 +179,8 @@ describe("UnWallet", () => {
         redirectURL: dummy.redirectURL.toString(),
       });
 
+      expect(locationMock.assign).toHaveBeenCalledTimes(1);
+
       let destURL: URL;
       {
         const result = safeParseAssignedLocationURLInMockCalls();
@@ -195,6 +218,8 @@ describe("UnWallet", () => {
         chainID: dummy.chainID,
       });
 
+      expect(locationMock.assign).toHaveBeenCalledTimes(1);
+
       let destURL: URL;
       {
         const result = safeParseAssignedLocationURLInMockCalls();
@@ -231,24 +256,28 @@ describe("UnWallet", () => {
         ticketToken: dummy.ticketToken,
       });
 
-      let windowURL: URL;
-      {
-        const result = safeParseOpenedWindowURLInMockCalls();
-        if (!result.success) {
-          expect.fail(z.prettifyError(result.error));
-        }
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
 
-        windowURL = result.data;
+      {
+        let windowURL: URL;
+        {
+          const result = safeParseOpenedWindowURLInMockCalls(0);
+          if (!result.success) {
+            expect.fail(z.prettifyError(result.error));
+          }
+
+          windowURL = result.data;
+        }
+        expect(windowURL.origin + windowURL.pathname).toBe(
+          `${uwConfig.frontend.baseURL}/x/sign`,
+        );
+        expect(Object.fromEntries(windowURL.searchParams)).toEqual({
+          connectionID: dummy.xConnID,
+          clientID: dummy.clientID,
+          message: dummy.msg,
+          ticketToken: dummy.ticketToken,
+        });
       }
-      expect(windowURL.origin + windowURL.pathname).toBe(
-        `${uwConfig.frontend.baseURL}/x/sign`,
-      );
-      expect(Object.fromEntries(windowURL.searchParams)).toEqual({
-        connectionID: dummy.xConnID,
-        clientID: dummy.clientID,
-        message: dummy.msg,
-        ticketToken: dummy.ticketToken,
-      });
 
       xAPIMock.sendToClient(
         JSON.stringify({
@@ -267,6 +296,29 @@ describe("UnWallet", () => {
         ticketToken: dummy.ticketToken,
       });
 
+      expect(windowMock.open).toHaveBeenCalledTimes(2);
+
+      {
+        let windowURL: URL;
+        {
+          const result = safeParseOpenedWindowURLInMockCalls(1);
+          if (!result.success) {
+            expect.fail(z.prettifyError(result.error));
+          }
+
+          windowURL = result.data;
+        }
+        expect(windowURL.origin + windowURL.pathname).toBe(
+          `${uwConfig.frontend.baseURL}/x/sign`,
+        );
+        expect(Object.fromEntries(windowURL.searchParams)).toEqual({
+          connectionID: dummy.xConnID,
+          clientID: dummy.clientID,
+          message: dummy.msg,
+          ticketToken: dummy.ticketToken,
+        });
+      }
+
       xAPIMock.sendToClient(
         JSON.stringify({
           type: "signature",
@@ -278,8 +330,6 @@ describe("UnWallet", () => {
         digest: dummy.msgDigest,
         signature: dummy.sig,
       } satisfies SignResult);
-
-      expect(windowMock.open).toHaveBeenCalledTimes(2);
     });
 
     it("rejects on an unopened connection", async () => {
@@ -295,11 +345,11 @@ describe("UnWallet", () => {
         ticketToken: dummy.ticketToken,
       });
 
+      expect(windowMock.open).not.toHaveBeenCalled();
+
       await expect(waitToSign).rejects.toThrow(
         new UWError("CONNECTION_NOT_OPENED"),
       );
-
-      expect(windowMock.open).not.toHaveBeenCalled();
     });
 
     it("rejects on a request in progress", async () => {
@@ -312,16 +362,19 @@ describe("UnWallet", () => {
         message: dummy.msg,
         ticketToken: dummy.ticketToken,
       });
+
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
       const waitToSignAgain = uw.sign({
         message: dummy.msg,
         ticketToken: dummy.ticketToken,
       });
 
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
       await expect(waitToSignAgain).rejects.toThrow(
         new UWError("REQUEST_IN_PROGRESS"),
       );
-
-      expect(windowMock.open).toHaveBeenCalledTimes(1);
 
       uw.close();
 
@@ -341,6 +394,8 @@ describe("UnWallet", () => {
         ticketToken: dummy.ticketToken,
       });
 
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
       xAPIMock.sendToClient(
         JSON.stringify({
           type: "transactionID",
@@ -351,8 +406,6 @@ describe("UnWallet", () => {
       await expect(waitToSign).rejects.toThrow(
         new UWError("INVALID_RESPONSE", "unexpected type: transactionID"),
       );
-
-      expect(windowMock.open).toHaveBeenCalledTimes(1);
     });
 
     it("rejects the first request, then accepts the second request", async () => {
@@ -366,6 +419,8 @@ describe("UnWallet", () => {
         ticketToken: dummy.ticketToken,
       });
 
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
       xAPIMock.sendToClient(
         JSON.stringify({
           type: "error",
@@ -375,12 +430,12 @@ describe("UnWallet", () => {
 
       await expect(waitToSign).rejects.toThrow(new UWError("REQUEST_REJECTED"));
 
-      expect(windowMock.open).toHaveBeenCalledTimes(1);
-
       const waitToSignAgain = uw.sign({
         message: dummy.msg,
         ticketToken: dummy.ticketToken,
       });
+
+      expect(windowMock.open).toHaveBeenCalledTimes(2);
 
       xAPIMock.sendToClient(
         JSON.stringify({
@@ -393,8 +448,6 @@ describe("UnWallet", () => {
         digest: dummy.msgDigest,
         signature: dummy.sig,
       } satisfies SignResult);
-
-      expect(windowMock.open).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -410,31 +463,35 @@ describe("UnWallet", () => {
         ticketToken: dummy.ticketToken,
       });
 
-      let windowURL: URL;
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
       {
-        const result = safeParseOpenedWindowURLInMockCalls();
-        if (!result.success) {
-          expect.fail(z.prettifyError(result.error));
+        let windowURL: URL;
+        {
+          const result = safeParseOpenedWindowURLInMockCalls(0);
+          if (!result.success) {
+            expect.fail(z.prettifyError(result.error));
+          }
+
+          windowURL = result.data;
         }
+        expect(windowURL.origin + windowURL.pathname).toBe(
+          `${uwConfig.frontend.baseURL}/x/signEIP712TypedData`,
+        );
+        expect(Object.fromEntries(windowURL.searchParams)).toEqual({
+          connectionID: dummy.xConnID,
+          clientID: dummy.clientID,
+          typedData: JSON.stringify(dummy.eip712TypedData),
+          ticketToken: dummy.ticketToken,
+        });
 
-        windowURL = result.data;
+        xAPIMock.sendToClient(
+          JSON.stringify({
+            type: "signature",
+            value: dummy.sig,
+          } satisfies XResponse),
+        );
       }
-      expect(windowURL.origin + windowURL.pathname).toBe(
-        `${uwConfig.frontend.baseURL}/x/signEIP712TypedData`,
-      );
-      expect(Object.fromEntries(windowURL.searchParams)).toEqual({
-        connectionID: dummy.xConnID,
-        clientID: dummy.clientID,
-        typedData: JSON.stringify(dummy.eip712TypedData),
-        ticketToken: dummy.ticketToken,
-      });
-
-      xAPIMock.sendToClient(
-        JSON.stringify({
-          type: "signature",
-          value: dummy.sig,
-        } satisfies XResponse),
-      );
 
       await expect(waitToSignEIP712TypedData).resolves.toEqual({
         digest: dummy.eip712TypedDataDigest,
@@ -445,6 +502,36 @@ describe("UnWallet", () => {
         typedData: dummy.eip712TypedData,
         ticketToken: dummy.ticketToken,
       });
+
+      expect(windowMock.open).toHaveBeenCalledTimes(2);
+
+      {
+        let windowURL: URL;
+        {
+          const result = safeParseOpenedWindowURLInMockCalls(1);
+          if (!result.success) {
+            expect.fail(z.prettifyError(result.error));
+          }
+
+          windowURL = result.data;
+        }
+        expect(windowURL.origin + windowURL.pathname).toBe(
+          `${uwConfig.frontend.baseURL}/x/signEIP712TypedData`,
+        );
+        expect(Object.fromEntries(windowURL.searchParams)).toEqual({
+          connectionID: dummy.xConnID,
+          clientID: dummy.clientID,
+          typedData: JSON.stringify(dummy.eip712TypedData),
+          ticketToken: dummy.ticketToken,
+        });
+
+        xAPIMock.sendToClient(
+          JSON.stringify({
+            type: "signature",
+            value: dummy.sig,
+          } satisfies XResponse),
+        );
+      }
 
       xAPIMock.sendToClient(
         JSON.stringify({
@@ -457,8 +544,6 @@ describe("UnWallet", () => {
         digest: dummy.eip712TypedDataDigest,
         signature: dummy.sig,
       } satisfies SignResult);
-
-      expect(windowMock.open).toHaveBeenCalledTimes(2);
     });
 
     it("rejects on an unopened connection", async () => {
@@ -474,11 +559,11 @@ describe("UnWallet", () => {
         ticketToken: dummy.ticketToken,
       });
 
+      expect(windowMock.open).not.toHaveBeenCalled();
+
       await expect(waitToSignEIP712TypedData).rejects.toThrow(
         new UWError("CONNECTION_NOT_OPENED"),
       );
-
-      expect(windowMock.open).not.toHaveBeenCalled();
     });
 
     it("rejects on a request in progress", async () => {
@@ -491,16 +576,19 @@ describe("UnWallet", () => {
         typedData: dummy.eip712TypedData,
         ticketToken: dummy.ticketToken,
       });
+
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
       const waitToSignEIP712TypedDataAgain = uw.signEIP712TypedData({
         typedData: dummy.eip712TypedData,
         ticketToken: dummy.ticketToken,
       });
 
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
       await expect(waitToSignEIP712TypedDataAgain).rejects.toThrow(
         new UWError("REQUEST_IN_PROGRESS"),
       );
-
-      expect(windowMock.open).toHaveBeenCalledTimes(1);
 
       uw.close();
 
@@ -523,14 +611,14 @@ describe("UnWallet", () => {
         ticketToken: dummy.ticketToken,
       });
 
+      expect(windowMock.open).not.toHaveBeenCalled();
+
       await expect(waitToSignEIP712TypedData).rejects.toThrow(
         new UWError(
           "INVALID_REQUEST",
           'invalid typed data: Invalid primary type `InvalidPrimaryType` must be one of `["Person","Mail"]`.',
         ),
       );
-
-      expect(windowMock.open).not.toHaveBeenCalled();
     });
 
     it("rejects on an invalid response: unexpected type: transaction id", async () => {
@@ -544,6 +632,8 @@ describe("UnWallet", () => {
         ticketToken: dummy.ticketToken,
       });
 
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
       xAPIMock.sendToClient(
         JSON.stringify({
           type: "transactionID",
@@ -554,8 +644,6 @@ describe("UnWallet", () => {
       await expect(waitToSignEIP712TypedData).rejects.toThrow(
         new UWError("INVALID_RESPONSE", "unexpected type: transactionID"),
       );
-
-      expect(windowMock.open).toHaveBeenCalledTimes(1);
     });
 
     it("rejects the first request, then accepts the second request", async () => {
@@ -569,6 +657,8 @@ describe("UnWallet", () => {
         ticketToken: dummy.ticketToken,
       });
 
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
       xAPIMock.sendToClient(
         JSON.stringify({
           type: "error",
@@ -580,12 +670,12 @@ describe("UnWallet", () => {
         new UWError("REQUEST_REJECTED"),
       );
 
-      expect(windowMock.open).toHaveBeenCalledTimes(1);
-
       const waitToSignEIP712TypedDataAgain = uw.signEIP712TypedData({
         typedData: dummy.eip712TypedData,
         ticketToken: dummy.ticketToken,
       });
+
+      expect(windowMock.open).toHaveBeenCalledTimes(2);
 
       xAPIMock.sendToClient(
         JSON.stringify({
@@ -598,30 +688,273 @@ describe("UnWallet", () => {
         digest: dummy.eip712TypedDataDigest,
         signature: dummy.sig,
       } satisfies SignResult);
+    });
+  });
+
+  describe("sendTransaction", () => {
+    it("resolves the first request, then accepts the second request", async () => {
+      const uw = await UnWallet.init({
+        env,
+        clientID: dummy.clientID,
+      });
+
+      const waitToSendTransaction = uw.sendTransaction({
+        chainID: dummy.chainID,
+        toAddress: dummy.txToAddress,
+        value: toHex(dummy.txValue),
+        ticketToken: dummy.ticketToken,
+      });
+
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
+      {
+        let windowURL: URL;
+        {
+          const result = safeParseOpenedWindowURLInMockCalls(0);
+          if (!result.success) {
+            expect.fail(z.prettifyError(result.error));
+          }
+
+          windowURL = result.data;
+        }
+        expect(windowURL.origin + windowURL.pathname).toBe(
+          `${uwConfig.frontend.baseURL}/x/sendTransaction`,
+        );
+        expect(Object.fromEntries(windowURL.searchParams)).toEqual({
+          connectionID: dummy.xConnID,
+          clientID: dummy.clientID,
+          chainID: dummy.chainID.toString(),
+          toAddress: dummy.txToAddress,
+          value: toHex(dummy.txValue),
+          data: "0x",
+          ticketToken: dummy.ticketToken,
+        });
+      }
+
+      xAPIMock.sendToClient(
+        JSON.stringify({
+          type: "transactionID",
+          value: dummy.txID,
+        } satisfies XResponse),
+      );
+
+      await expect(waitToSendTransaction).resolves.toEqual({
+        transactionID: dummy.txID,
+      } satisfies SendTransactionResult);
+
+      const waitToSendTransactionAgain = uw.sendTransaction({
+        chainID: dummy.chainID,
+        toAddress: dummy.txToAddress,
+        data: toHex(dummy.txData),
+        ticketToken: dummy.ticketToken,
+      });
 
       expect(windowMock.open).toHaveBeenCalledTimes(2);
+
+      {
+        let windowURL: URL;
+        {
+          const result = safeParseOpenedWindowURLInMockCalls(1);
+          if (!result.success) {
+            expect.fail(z.prettifyError(result.error));
+          }
+
+          windowURL = result.data;
+        }
+        expect(windowURL.origin + windowURL.pathname).toBe(
+          `${uwConfig.frontend.baseURL}/x/sendTransaction`,
+        );
+        expect(Object.fromEntries(windowURL.searchParams)).toEqual({
+          connectionID: dummy.xConnID,
+          clientID: dummy.clientID,
+          chainID: dummy.chainID.toString(),
+          toAddress: dummy.txToAddress,
+          value: "0x0",
+          data: toHex(dummy.txData),
+          ticketToken: dummy.ticketToken,
+        });
+      }
+
+      xAPIMock.sendToClient(
+        JSON.stringify({
+          type: "transactionID",
+          value: dummy.txID,
+        } satisfies XResponse),
+      );
+
+      await expect(waitToSendTransactionAgain).resolves.toEqual({
+        transactionID: dummy.txID,
+      } satisfies SendTransactionResult);
+    });
+
+    it("rejects on an unopened connection", async () => {
+      const uw = await UnWallet.init({
+        env,
+        clientID: dummy.clientID,
+      });
+
+      uw.close();
+
+      const waitToSendTransaction = uw.sendTransaction({
+        chainID: dummy.chainID,
+        toAddress: dummy.txToAddress,
+        value: toHex(dummy.txValue),
+        ticketToken: dummy.ticketToken,
+      });
+
+      expect(windowMock.open).not.toHaveBeenCalled();
+
+      await expect(waitToSendTransaction).rejects.toThrow(
+        new UWError("CONNECTION_NOT_OPENED"),
+      );
+    });
+
+    it("rejects on a request in progress", async () => {
+      const uw = await UnWallet.init({
+        env,
+        clientID: dummy.clientID,
+      });
+
+      const waitToSendTransaction = uw.sendTransaction({
+        chainID: dummy.chainID,
+        toAddress: dummy.txToAddress,
+        value: toHex(dummy.txValue),
+        ticketToken: dummy.ticketToken,
+      });
+
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
+      const waitToSendTransactionAgain = uw.sendTransaction({
+        chainID: dummy.chainID,
+        toAddress: dummy.txToAddress,
+        data: toHex(dummy.txData),
+        ticketToken: dummy.ticketToken,
+      });
+
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
+      await expect(waitToSendTransactionAgain).rejects.toThrow(
+        new UWError("REQUEST_IN_PROGRESS"),
+      );
+
+      uw.close();
+
+      await expect(waitToSendTransaction).rejects.toThrow(
+        new UWError("CONNECTION_CLOSED"),
+      );
+    });
+
+    it("rejects on an invalid request: either value or data is required", async () => {
+      const uw = await UnWallet.init({
+        env,
+        clientID: dummy.clientID,
+      });
+
+      const waitToSendTransaction = uw.sendTransaction({
+        chainID: dummy.chainID,
+        toAddress: dummy.txToAddress,
+        ticketToken: dummy.ticketToken,
+      });
+
+      expect(windowMock.open).not.toHaveBeenCalled();
+
+      await expect(waitToSendTransaction).rejects.toThrow(
+        new UWError("INVALID_REQUEST", "either value or data is required"),
+      );
+    });
+
+    it("rejects on an invalid response: unexpected type: signature", async () => {
+      const uw = await UnWallet.init({
+        env,
+        clientID: dummy.clientID,
+      });
+
+      const waitToSendTransaction = uw.sendTransaction({
+        chainID: dummy.chainID,
+        toAddress: dummy.txToAddress,
+        value: toHex(dummy.txValue),
+        ticketToken: dummy.ticketToken,
+      });
+
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
+      xAPIMock.sendToClient(
+        JSON.stringify({
+          type: "signature",
+          value: dummy.sig,
+        } satisfies XResponse),
+      );
+
+      await expect(waitToSendTransaction).rejects.toThrow(
+        new UWError("INVALID_RESPONSE", "unexpected type: signature"),
+      );
+    });
+
+    it("rejects the first request, then accepts the second request", async () => {
+      const uw = await UnWallet.init({
+        env,
+        clientID: dummy.clientID,
+      });
+
+      const waitToSendTransaction = uw.sendTransaction({
+        chainID: dummy.chainID,
+        toAddress: dummy.txToAddress,
+        value: toHex(dummy.txValue),
+        ticketToken: dummy.ticketToken,
+      });
+
+      expect(windowMock.open).toHaveBeenCalledTimes(1);
+
+      xAPIMock.sendToClient(
+        JSON.stringify({
+          type: "error",
+          value: "rejected",
+        } satisfies XResponse),
+      );
+
+      await expect(waitToSendTransaction).rejects.toThrow(
+        new UWError("REQUEST_REJECTED"),
+      );
+
+      const waitToSendTransactionAgain = uw.sendTransaction({
+        chainID: dummy.chainID,
+        toAddress: dummy.txToAddress,
+        data: toHex(dummy.txData),
+        ticketToken: dummy.ticketToken,
+      });
+
+      expect(windowMock.open).toHaveBeenCalledTimes(2);
+
+      xAPIMock.sendToClient(
+        JSON.stringify({
+          type: "transactionID",
+          value: dummy.txID,
+        } satisfies XResponse),
+      );
+
+      await expect(waitToSendTransactionAgain).resolves.toEqual({
+        transactionID: dummy.txID,
+      } satisfies SendTransactionResult);
     });
   });
 });
 
-function safeParseAssignedLocationURLInMockCalls() {
+function safeParseAssignedLocationURLInMockCalls(idx: number = 0) {
   return z
-    .tuple([z.tuple([z.union([z.url(), z.instanceof(URL)])])])
-    .transform((val) => new URL(val[0][0]))
-    .safeParse(locationMock.assign.mock.calls);
+    .tuple([z.union([z.url(), z.instanceof(URL)])])
+    .transform((val) => new URL(val[0]))
+    .safeParse(locationMock.assign.mock.calls[idx]);
 }
 
-function safeParseOpenedWindowURLInMockCalls() {
+function safeParseOpenedWindowURLInMockCalls(idx: number = 0) {
   return z
     .tuple([
-      z.tuple([
-        z.url(),
-        z.literal("_blank"),
-        z.literal(
-          `width=${screenMock.width / 2},height=${screenMock.height},left=${screenMock.width / 4},top=0`,
-        ),
-      ]),
+      z.url(),
+      z.literal("_blank"),
+      z.literal(
+        `width=${screenMock.width / 2},height=${screenMock.height},left=${screenMock.width / 4},top=0`,
+      ),
     ])
-    .transform((val) => new URL(val[0][0]))
-    .safeParse(windowMock.open.mock.calls);
+    .transform((val) => new URL(val[0]))
+    .safeParse(windowMock.open.mock.calls[idx]);
 }
