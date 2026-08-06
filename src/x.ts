@@ -254,13 +254,15 @@ function safeParseXResponsePayload(
 }
 
 export function newUnexpectedXResponseTypeError(resp: XResponse): UWError {
-  let msg = `unexpected type: ${resp.type}`;
-
-  if (resp.type === "error") {
-    msg += ` (value: ${resp.value})`;
+  const msgs = [];
+  {
+    msgs.push(`unexpected type: ${resp.type}`);
+    if (resp.type === "error") {
+      msgs.push(`(value: ${resp.value})`);
+    }
   }
 
-  return new UWError("INVALID_RESPONSE", msg);
+  return new UWError("INVALID_RESPONSE", msgs.join(" "));
 }
 
 export function newConnectionClosedError(event: CloseEvent): UWError {
