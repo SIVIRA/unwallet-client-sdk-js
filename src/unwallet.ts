@@ -23,9 +23,9 @@ export interface SendTransactionResult {
 }
 
 export class UnWallet {
-  private env: Env;
-  private clientID: string;
-  private xConnection: XConnection;
+  private readonly env: Env;
+  private readonly clientID: string;
+  private readonly xConnection: XConnection;
 
   constructor(args: { env: Env; clientID: string; xConnection: XConnection }) {
     this.env = args.env;
