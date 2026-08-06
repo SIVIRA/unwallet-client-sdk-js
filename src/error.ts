@@ -15,8 +15,8 @@ export class UWError extends Error {
 
   public readonly code: UWErrorCode;
 
-  constructor(code: UWErrorCode, message?: string) {
-    super(message !== undefined ? `${code}: ${message}` : code);
+  constructor(code: UWErrorCode, msg?: string) {
+    super(msg !== undefined ? `${code}: ${msg}` : code);
     this.code = code;
   }
 }
