@@ -5,7 +5,12 @@ import { UWError } from "./error";
 
 const X_ACTIONS = ["getConnectionID"] as const;
 
-export type XAction = (typeof X_ACTIONS)[number];
+const X_RESPONSE_TYPES = [
+  "connectionID",
+  "signature",
+  "transactionID",
+  "error",
+] as const;
 
 export const xRequestSchema = z.object({
   action: z.enum(X_ACTIONS),
@@ -13,31 +18,18 @@ export const xRequestSchema = z.object({
 
 export const xRequestPayloadSchema = z
   .string()
-  .refine(
-    (val) => {
-      try {
-        JSON.parse(val);
-      } catch {
-        return false;
-      }
-      return true;
-    },
-    {
-      abort: true,
-      error: "Invalid JSON string",
-    },
-  )
-  .transform((val) => JSON.parse(val))
+  .transform((val, ctx) => {
+    try {
+      return JSON.parse(val);
+    } catch {
+      ctx.addIssue({
+        code: "custom",
+        message: "Invalid JSON string",
+      });
+      return z.NEVER;
+    }
+  })
   .pipe(xRequestSchema);
-
-export type XRequest = z.infer<typeof xRequestSchema>;
-
-const X_RESPONSE_TYPES = [
-  "connectionID",
-  "signature",
-  "transactionID",
-  "error",
-] as const;
 
 export const xResponseSchema = z.object({
   type: z.enum(X_RESPONSE_TYPES),
@@ -46,24 +38,25 @@ export const xResponseSchema = z.object({
 
 export const xResponsePayloadSchema = z
   .string()
-  .refine(
-    (val) => {
-      try {
-        JSON.parse(val);
-      } catch (e) {
-        return false;
-      }
-      return true;
-    },
-    {
-      abort: true,
-      error: "Invalid JSON string",
-    },
-  )
-  .transform((val) => JSON.parse(val))
+  .transform((val, ctx) => {
+    try {
+      return JSON.parse(val);
+    } catch {
+      ctx.addIssue({
+        code: "custom",
+        message: "Invalid JSON string",
+      });
+      return z.NEVER;
+    }
+  })
   .pipe(xResponseSchema);
 
+export type XAction = (typeof X_ACTIONS)[number];
+
+export type XRequest = z.infer<typeof xRequestSchema>;
+
 export type XResponseType = (typeof X_RESPONSE_TYPES)[number];
+
 export type XResponse = z.infer<typeof xResponseSchema>;
 
 export type XResponseHandler = {
