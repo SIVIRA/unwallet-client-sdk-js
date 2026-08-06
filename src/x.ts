@@ -1,16 +1,10 @@
+import { isHex } from "viem";
 import { z } from "zod";
 
 import { UnWalletXAPIConfig } from "./config";
 import { UWError } from "./error";
 
 const X_ACTIONS = ["getConnectionID"] as const;
-
-const X_RESPONSE_TYPES = [
-  "connectionID",
-  "signature",
-  "transactionID",
-  "error",
-] as const;
 
 export const xRequestSchema = z
   .object({
@@ -34,10 +28,26 @@ export const xRequestPayloadSchema = z
   .pipe(xRequestSchema);
 
 export const xResponseSchema = z
-  .object({
-    type: z.enum(X_RESPONSE_TYPES),
-    value: z.string(),
-  })
+  .union([
+    z.object({
+      type: z.literal("connectionID"),
+      value: z.string().nonempty(),
+    }),
+    z.object({
+      type: z.literal("signature"),
+      value: z.string().nonempty().refine(isHex, {
+        message: "Invalid hex string",
+      }),
+    }),
+    z.object({
+      type: z.literal("transactionID"),
+      value: z.string().nonempty(),
+    }),
+    z.object({
+      type: z.literal("error"),
+      value: z.string().nonempty(),
+    }),
+  ])
   .readonly();
 
 export const xResponsePayloadSchema = z
@@ -58,8 +68,6 @@ export const xResponsePayloadSchema = z
 export type XAction = (typeof X_ACTIONS)[number];
 
 export type XRequest = z.infer<typeof xRequestSchema>;
-
-export type XResponseType = (typeof X_RESPONSE_TYPES)[number];
 
 export type XResponse = z.infer<typeof xResponseSchema>;
 
