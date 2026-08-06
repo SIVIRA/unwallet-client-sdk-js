@@ -12,9 +12,11 @@ const X_RESPONSE_TYPES = [
   "error",
 ] as const;
 
-export const xRequestSchema = z.object({
-  action: z.enum(X_ACTIONS),
-});
+export const xRequestSchema = z
+  .object({
+    action: z.enum(X_ACTIONS),
+  })
+  .readonly();
 
 export const xRequestPayloadSchema = z
   .string()
@@ -31,10 +33,12 @@ export const xRequestPayloadSchema = z
   })
   .pipe(xRequestSchema);
 
-export const xResponseSchema = z.object({
-  type: z.enum(X_RESPONSE_TYPES),
-  value: z.string(),
-});
+export const xResponseSchema = z
+  .object({
+    type: z.enum(X_RESPONSE_TYPES),
+    value: z.string(),
+  })
+  .readonly();
 
 export const xResponsePayloadSchema = z
   .string()

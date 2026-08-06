@@ -6,19 +6,19 @@ import { z } from "zod";
 import { xRequestPayloadSchema, XRequest } from "./x";
 
 export type XAPIMockOptions = {
-  handlers?: XAPIMockHandlers;
+  readonly handlers?: XAPIMockHandlers;
 };
 
 export type XAPIMockHandlers = {
-  beforeEachAction?: (args: {
+  readonly beforeEachAction?: (args: {
     client: WebSocketHandlerConnection["client"];
     request: XRequest;
   }) => void;
-  getConnectionID?: (args: {
+  readonly getConnectionID?: (args: {
     client: WebSocketHandlerConnection["client"];
     request: XRequest;
   }) => void;
-  onConnectionClosed?: (args: {
+  readonly onConnectionClosed?: (args: {
     client: WebSocketHandlerConnection["client"];
   }) => void;
 };
