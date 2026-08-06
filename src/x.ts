@@ -36,7 +36,7 @@ export const xResponseSchema = z
     z.object({
       type: z.literal("signature"),
       value: z.string().nonempty().refine(isHex, {
-        message: "Invalid hex string",
+        error: "Invalid hex string",
       }),
     }),
     z.object({
