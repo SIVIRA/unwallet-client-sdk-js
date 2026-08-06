@@ -24,7 +24,7 @@ export const xRequestPayloadSchema = z
     },
     {
       abort: true,
-      message: "Invalid JSON string",
+      error: "Invalid JSON string",
     },
   )
   .transform((val) => JSON.parse(val))
@@ -57,7 +57,7 @@ export const xResponsePayloadSchema = z
     },
     {
       abort: true,
-      message: "Invalid JSON string",
+      error: "Invalid JSON string",
     },
   )
   .transform((val) => JSON.parse(val))
