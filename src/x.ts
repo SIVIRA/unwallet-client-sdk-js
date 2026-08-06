@@ -60,17 +60,17 @@ export type XResponseType = (typeof X_RESPONSE_TYPES)[number];
 export type XResponse = z.infer<typeof xResponseSchema>;
 
 export type XResponseHandler = {
-  resolve: (resp: XResponse) => void;
-  reject: (err: UWError) => void;
+  readonly resolve: (resp: XResponse) => void;
+  readonly reject: (err: UWError) => void;
 };
 
 export type XConnectionOptions = {
-  debugHandlers?: XConnectionDebugHandlers;
+  readonly debugHandlers?: XConnectionDebugHandlers;
 };
 
 export type XConnectionDebugHandlers = {
-  onMessageEventDropped?: (event: MessageEvent) => void;
-  onCloseEventDropped?: (event: CloseEvent) => void;
+  readonly onMessageEventDropped?: (event: MessageEvent) => void;
+  readonly onCloseEventDropped?: (event: CloseEvent) => void;
 };
 
 export class XConnection {
