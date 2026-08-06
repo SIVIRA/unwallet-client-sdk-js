@@ -224,8 +224,8 @@ export class XConnection {
     return this.responseHandler !== null;
   }
 
-  public setResponseHandler(handler: XResponseHandler | null): void {
-    this.responseHandler = handler;
+  public setResponseHandler(respHandler: XResponseHandler | null): void {
+    this.responseHandler = respHandler;
   }
 
   public close(): void {
