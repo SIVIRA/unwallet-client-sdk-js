@@ -43,7 +43,7 @@ export class UnWallet {
     });
   }
 
-  private get unWalletConfig(): UnWalletConfig {
+  private get uwConfig(): UnWalletConfig {
     return getUnWalletConfigByEnv(this.env);
   }
 
@@ -55,7 +55,7 @@ export class UnWallet {
     chainID?: number;
   }): void {
     const url = new URL(
-      `${this.unWalletConfig.frontend.baseURL}/${
+      `${this.uwConfig.frontend.baseURL}/${
         args.isVirtual === false ? "" : "v"
       }authorize`,
     );
@@ -112,7 +112,7 @@ export class UnWallet {
         },
       });
 
-      const url = new URL(`${this.unWalletConfig.frontend.baseURL}/x/sign`);
+      const url = new URL(`${this.uwConfig.frontend.baseURL}/x/sign`);
       {
         url.searchParams.set("connectionID", this.xConnection.id);
         url.searchParams.set("clientID", this.clientID);
@@ -179,7 +179,7 @@ export class UnWallet {
       });
 
       const url = new URL(
-        `${this.unWalletConfig.frontend.baseURL}/x/signEIP712TypedData`,
+        `${this.uwConfig.frontend.baseURL}/x/signEIP712TypedData`,
       );
       {
         url.searchParams.set("connectionID", this.xConnection.id);
@@ -234,7 +234,7 @@ export class UnWallet {
       });
 
       const url = new URL(
-        `${this.unWalletConfig.frontend.baseURL}/x/sendTransaction`,
+        `${this.uwConfig.frontend.baseURL}/x/sendTransaction`,
       );
       {
         url.searchParams.set("connectionID", this.xConnection.id);
