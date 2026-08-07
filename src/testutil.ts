@@ -5,10 +5,6 @@ import { z } from "zod";
 
 import { xRequestPayloadSchema, XRequest } from "./x";
 
-export type XAPIMockOptions = {
-  handlers?: XAPIMockHandlers;
-};
-
 export type XAPIMockHandlers = {
   beforeEachAction?: (args: {
     readonly client: WebSocketHandlerConnection["client"];
@@ -30,15 +26,12 @@ export function base64URLEncode(s: string): string {
     .replace(/=+$/, "");
 }
 
-export function mockXAPI(
-  url: string,
-  opts?: XAPIMockOptions,
-): {
+export function mockXAPI(args: { url: string; handlers?: XAPIMockHandlers }): {
   server: SetupServer;
   sendToClient: (data: WebSocketData) => void;
   closeClient: (code?: number, reason?: string) => void;
 } {
-  const interceptor = ws.link(url);
+  const interceptor = ws.link(args.url);
 
   let client: WebSocketHandlerConnection["client"];
 
@@ -63,14 +56,14 @@ export function mockXAPI(
           req = result.data;
         }
 
-        opts?.handlers?.beforeEachAction?.({
+        args?.handlers?.beforeEachAction?.({
           client: connection.client,
           request: req,
         });
 
         switch (req.action) {
           case "getConnectionID":
-            opts?.handlers?.getConnectionID?.({
+            args?.handlers?.getConnectionID?.({
               client: connection.client,
               request: req,
             });
@@ -79,7 +72,7 @@ export function mockXAPI(
       });
 
       connection.client.addEventListener("close", () =>
-        opts?.handlers?.onConnectionClosed?.({
+        args?.handlers?.onConnectionClosed?.({
           client: connection.client,
         }),
       );

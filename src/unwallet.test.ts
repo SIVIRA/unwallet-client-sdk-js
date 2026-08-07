@@ -136,7 +136,8 @@ const screenMock = {
 const windowMock = {
   open: vi.fn(),
 };
-const xAPIMock = mockXAPI(uwConfig.xAPI.url, {
+const xAPIMock = mockXAPI({
+  url: uwConfig.xAPI.url,
   handlers: {
     getConnectionID: (args) =>
       args.client.send(
