@@ -3,7 +3,7 @@ import { SetupServer, setupServer } from "msw/node";
 import { ByteArray, Hex, bytesToHex, toBytes } from "viem";
 import { z } from "zod";
 
-import { xRequestPayloadSchema, XRequest } from "./x";
+import { xRequestPayloadSchema, XRequest } from "./xconn";
 
 export type XAPIMockHandlers = {
   beforeEachAction?: (args: {

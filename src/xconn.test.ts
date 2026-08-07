@@ -16,7 +16,12 @@ import {
   mockXAPI,
   randomBytesHex,
 } from "./testutil";
-import { XAction, XConnection, XConnectionOptions, XResponse } from "./x";
+import {
+  XAction,
+  XConnection,
+  XConnectionDebugOptions,
+  XResponse,
+} from "./xconn";
 
 const dummy = ((): {
   xAPIURL: string;
@@ -59,9 +64,9 @@ const xActionToCallCount: Record<XAction, number> = {
   getConnectionID: 0,
 };
 
-async function initXConnection(
-  opts?: XConnectionOptions,
-): Promise<XConnection> {
+async function initXConnection(config?: {
+  readonly debug?: XConnectionDebugOptions;
+}): Promise<XConnection> {
   xAPIMockHandlers.getConnectionID = (args) => {
     args.client.send(
       JSON.stringify({
@@ -71,13 +76,11 @@ async function initXConnection(
     );
   };
 
-  return await XConnection.init(
-    {
-      url: dummy.xAPIURL,
-      connectionTimeout: 1_000,
-    },
-    opts,
-  );
+  return await XConnection.init({
+    url: dummy.xAPIURL,
+    connectionTimeout: 1_000,
+    debug: config?.debug,
+  });
 }
 
 beforeAll(() =>
@@ -265,8 +268,10 @@ describe("XConnection", () => {
       let isMessageEventDropped = false;
 
       const xConn = await initXConnection({
-        debugHandlers: {
-          onMessageEventDropped: () => (isMessageEventDropped = true),
+        debug: {
+          handlers: {
+            onMessageEventDropped: () => (isMessageEventDropped = true),
+          },
         },
       });
       expect(xConn.hasResponseHandler).toBe(false);
@@ -338,8 +343,10 @@ describe("XConnection", () => {
       let isCloseEventDropped = false;
 
       const xConn = await initXConnection({
-        debugHandlers: {
-          onCloseEventDropped: () => (isCloseEventDropped = true),
+        debug: {
+          handlers: {
+            onCloseEventDropped: () => (isCloseEventDropped = true),
+          },
         },
       });
       expect(xConn.hasResponseHandler).toBe(false);

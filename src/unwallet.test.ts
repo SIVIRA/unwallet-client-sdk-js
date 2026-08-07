@@ -30,7 +30,7 @@ import {
   randomBytesHex,
 } from "./testutil";
 import { SendTransactionResult, SignResult, UnWallet } from "./unwallet";
-import { XResponse } from "./x";
+import { XResponse } from "./xconn";
 
 const env = "dev";
 const uwConfig = envToUnWalletConfig[env];
