@@ -46,7 +46,7 @@ const xAPIMockHandlers: Omit<XAPIMockHandlers, "beforeEachAction"> = {
   onConnectionClosed: () => {},
 };
 const xAPIMock = mockXAPI({
-  url: dummy.xAPIURL,
+  urls: [dummy.xAPIURL],
   handlers: {
     beforeEachAction: (args) => {
       switch (args.request.action) {
