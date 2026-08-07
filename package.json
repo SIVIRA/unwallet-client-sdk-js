@@ -32,7 +32,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "viem": "2.55.10",
+    "viem": "2.55.11",
     "zod": "4.4.3"
   },
   "devDependencies": {
