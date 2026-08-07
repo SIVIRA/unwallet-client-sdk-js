@@ -72,7 +72,7 @@ export type XRequest = z.infer<typeof xRequestSchema>;
 export type XResponse = z.infer<typeof xResponseSchema>;
 export type XResponseType = XResponse["type"];
 export type XResponseValue<T extends XResponseType> = {
-  [T in XResponseType]: Extract<XResponse, { type: T }>["value"];
+  [U in XResponseType]: Extract<XResponse, { type: U }>["value"];
 }[T];
 
 export type XResponseHandler = {
