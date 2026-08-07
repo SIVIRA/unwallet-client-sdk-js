@@ -32,9 +32,6 @@ import {
 import { SendTransactionResult, SignResult, UnWallet } from "./unwallet";
 import { XResponse } from "./xconn";
 
-const env = "dev";
-const uwConfig = envToUnWalletConfig[env];
-
 const dummy = ((): {
   xConnID: string;
 
@@ -137,7 +134,7 @@ const windowMock = {
   open: vi.fn(),
 };
 const xAPIMock = mockXAPI({
-  url: uwConfig.xAPI.url,
+  urls: [envToUnWalletConfig.prod.xAPI.url, envToUnWalletConfig.dev.xAPI.url],
   handlers: {
     getConnectionID: (args) =>
       args.client.send(
@@ -169,10 +166,43 @@ afterEach(() => {
 afterAll(() => xAPIMock.server.close());
 
 describe("UnWallet", () => {
+  describe("init", () => {
+    it("connects to the prod xapi: with default env", async () => {
+      await UnWallet.init({
+        clientID: dummy.clientID,
+      });
+
+      expect(xAPIMock.connectedURL().href).toBe(
+        new URL(envToUnWalletConfig.prod.xAPI.url).href,
+      );
+    });
+
+    it("connects to the prod xapi", async () => {
+      await UnWallet.init({
+        env: "prod",
+        clientID: dummy.clientID,
+      });
+
+      expect(xAPIMock.connectedURL().href).toBe(
+        new URL(envToUnWalletConfig.prod.xAPI.url).href,
+      );
+    });
+
+    it("connects to the dev xapi", async () => {
+      await UnWallet.init({
+        env: "dev",
+        clientID: dummy.clientID,
+      });
+
+      expect(xAPIMock.connectedURL().href).toBe(
+        new URL(envToUnWalletConfig.dev.xAPI.url).href,
+      );
+    });
+  });
+
   describe("authorize", () => {
     it("redirects to the virtual authorization page: with default options", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -192,7 +222,10 @@ describe("UnWallet", () => {
         destURL = result.data;
       }
       expect(destURL.origin + destURL.pathname).toBe(
-        new URL("/vauthorize", uwConfig.frontend.origin).toString(),
+        new URL(
+          "/vauthorize",
+          envToUnWalletConfig.prod.frontend.origin,
+        ).toString(),
       );
       expect(Object.fromEntries(destURL.searchParams)).toEqual({
         response_type: "id_token",
@@ -207,7 +240,6 @@ describe("UnWallet", () => {
       const responseMode = "form_post";
 
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -231,7 +263,10 @@ describe("UnWallet", () => {
         destURL = result.data;
       }
       expect(destURL.origin + destURL.pathname).toBe(
-        new URL("/authorize", uwConfig.frontend.origin).toString(),
+        new URL(
+          "/authorize",
+          envToUnWalletConfig.prod.frontend.origin,
+        ).toString(),
       );
       expect(Object.fromEntries(destURL.searchParams)).toEqual({
         response_type: "id_token",
@@ -248,7 +283,6 @@ describe("UnWallet", () => {
   describe("sign", () => {
     it("resolves the first request, then accepts the second request", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -270,7 +304,10 @@ describe("UnWallet", () => {
           windowURL = result.data;
         }
         expect(windowURL.origin + windowURL.pathname).toBe(
-          new URL("/x/sign", uwConfig.frontend.origin).toString(),
+          new URL(
+            "/x/sign",
+            envToUnWalletConfig.prod.frontend.origin,
+          ).toString(),
         );
         expect(Object.fromEntries(windowURL.searchParams)).toEqual({
           connectionID: dummy.xConnID,
@@ -310,7 +347,10 @@ describe("UnWallet", () => {
           windowURL = result.data;
         }
         expect(windowURL.origin + windowURL.pathname).toBe(
-          new URL("/x/sign", uwConfig.frontend.origin).toString(),
+          new URL(
+            "/x/sign",
+            envToUnWalletConfig.prod.frontend.origin,
+          ).toString(),
         );
         expect(Object.fromEntries(windowURL.searchParams)).toEqual({
           connectionID: dummy.xConnID,
@@ -335,7 +375,6 @@ describe("UnWallet", () => {
 
     it("rejects on an unopened connection", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -355,7 +394,6 @@ describe("UnWallet", () => {
 
     it("rejects on a request in progress", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -386,7 +424,6 @@ describe("UnWallet", () => {
 
     it("rejects on an invalid response: unexpected type: transaction id", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -411,7 +448,6 @@ describe("UnWallet", () => {
 
     it("rejects the first request, then accepts the second request", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -455,7 +491,6 @@ describe("UnWallet", () => {
   describe("signEIP712TypedData", () => {
     it("resolves the first request, then accepts the second request", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -479,7 +514,7 @@ describe("UnWallet", () => {
         expect(windowURL.origin + windowURL.pathname).toBe(
           new URL(
             "/x/signEIP712TypedData",
-            uwConfig.frontend.origin,
+            envToUnWalletConfig.prod.frontend.origin,
           ).toString(),
         );
         expect(Object.fromEntries(windowURL.searchParams)).toEqual({
@@ -522,7 +557,7 @@ describe("UnWallet", () => {
         expect(windowURL.origin + windowURL.pathname).toBe(
           new URL(
             "/x/signEIP712TypedData",
-            uwConfig.frontend.origin,
+            envToUnWalletConfig.prod.frontend.origin,
           ).toString(),
         );
         expect(Object.fromEntries(windowURL.searchParams)).toEqual({
@@ -555,7 +590,6 @@ describe("UnWallet", () => {
 
     it("rejects on an invalid request: invalid typed data", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -579,7 +613,6 @@ describe("UnWallet", () => {
 
     it("rejects on an unopened connection", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -599,7 +632,6 @@ describe("UnWallet", () => {
 
     it("rejects on a request in progress", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -630,7 +662,6 @@ describe("UnWallet", () => {
 
     it("rejects on an invalid response: unexpected type: transaction id", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -655,7 +686,6 @@ describe("UnWallet", () => {
 
     it("rejects the first request, then accepts the second request", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -701,7 +731,6 @@ describe("UnWallet", () => {
   describe("sendTransaction", () => {
     it("resolves the first request, then accepts the second request", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -725,7 +754,10 @@ describe("UnWallet", () => {
           windowURL = result.data;
         }
         expect(windowURL.origin + windowURL.pathname).toBe(
-          new URL("/x/sendTransaction", uwConfig.frontend.origin).toString(),
+          new URL(
+            "/x/sendTransaction",
+            envToUnWalletConfig.prod.frontend.origin,
+          ).toString(),
         );
         expect(Object.fromEntries(windowURL.searchParams)).toEqual({
           connectionID: dummy.xConnID,
@@ -769,7 +801,10 @@ describe("UnWallet", () => {
           windowURL = result.data;
         }
         expect(windowURL.origin + windowURL.pathname).toBe(
-          new URL("/x/sendTransaction", uwConfig.frontend.origin).toString(),
+          new URL(
+            "/x/sendTransaction",
+            envToUnWalletConfig.prod.frontend.origin,
+          ).toString(),
         );
         expect(Object.fromEntries(windowURL.searchParams)).toEqual({
           connectionID: dummy.xConnID,
@@ -796,7 +831,6 @@ describe("UnWallet", () => {
 
     it("rejects on an invalid request: either value or data is required", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -815,7 +849,6 @@ describe("UnWallet", () => {
 
     it("rejects on an unopened connection", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -837,7 +870,6 @@ describe("UnWallet", () => {
 
     it("rejects on a request in progress", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -872,7 +904,6 @@ describe("UnWallet", () => {
 
     it("rejects on an invalid response: unexpected type: signature", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 
@@ -899,7 +930,6 @@ describe("UnWallet", () => {
 
     it("rejects the first request, then accepts the second request", async () => {
       const uw = await UnWallet.init({
-        env,
         clientID: dummy.clientID,
       });
 

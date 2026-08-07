@@ -27,63 +27,67 @@ export function base64URLEncode(s: string): string {
 }
 
 export function mockXAPI(args: {
-  readonly url: string;
+  readonly urls: string[];
   readonly handlers?: XAPIMockHandlers;
 }): {
   readonly server: SetupServer;
+  readonly connectedURL: () => URL;
   readonly sendToClient: (data: WebSocketData) => void;
   readonly closeClient: (code?: number, reason?: string) => void;
 } {
-  const interceptor = ws.link(args.url);
-
   let client: WebSocketHandlerConnection["client"];
 
-  const server = setupServer(
-    interceptor.addEventListener("connection", (connection) => {
-      client = connection.client;
+  const onConnection = (conn: WebSocketHandlerConnection) => {
+    client = conn.client;
 
-      connection.client.addEventListener("message", (event) => {
-        let req: XRequest;
-        {
-          const result = xRequestPayloadSchema.safeParse(event.data);
-          if (!result.success) {
-            connection.client.send(
-              JSON.stringify({
-                type: "error",
-                value: z.prettifyError(result.error),
-              }),
-            );
-            return;
-          }
-
-          req = result.data;
+    conn.client.addEventListener("message", (event) => {
+      let req: XRequest;
+      {
+        const result = xRequestPayloadSchema.safeParse(event.data);
+        if (!result.success) {
+          conn.client.send(
+            JSON.stringify({
+              type: "error",
+              value: z.prettifyError(result.error),
+            }),
+          );
+          return;
         }
 
-        args?.handlers?.beforeEachAction?.({
-          client: connection.client,
-          request: req,
-        });
+        req = result.data;
+      }
 
-        switch (req.action) {
-          case "getConnectionID":
-            args?.handlers?.getConnectionID?.({
-              client: connection.client,
-              request: req,
-            });
-            break;
-        }
+      args?.handlers?.beforeEachAction?.({
+        client: conn.client,
+        request: req,
       });
 
-      connection.client.addEventListener("close", () =>
-        args?.handlers?.onConnectionClosed?.({
-          client: connection.client,
-        }),
-      );
-    }),
+      switch (req.action) {
+        case "getConnectionID":
+          args?.handlers?.getConnectionID?.({
+            client: conn.client,
+            request: req,
+          });
+          break;
+      }
+    });
+
+    conn.client.addEventListener("close", () =>
+      args?.handlers?.onConnectionClosed?.({
+        client: conn.client,
+      }),
+    );
+  };
+
+  const server = setupServer(
+    ...args.urls.map((url) =>
+      ws.link(url).addEventListener("connection", onConnection),
+    ),
   );
 
   return {
     server,
+    connectedURL: () => client.url,
     sendToClient: (data: WebSocketData) => client.send(data),
     closeClient: (code?: number, reason?: string) => client.close(code, reason),
   };
