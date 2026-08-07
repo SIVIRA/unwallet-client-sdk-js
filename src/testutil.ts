@@ -11,15 +11,15 @@ export type XAPIMockOptions = {
 
 export type XAPIMockHandlers = {
   beforeEachAction?: (args: {
-    client: WebSocketHandlerConnection["client"];
-    request: XRequest;
+    readonly client: WebSocketHandlerConnection["client"];
+    readonly request: XRequest;
   }) => void;
   getConnectionID?: (args: {
-    client: WebSocketHandlerConnection["client"];
-    request: XRequest;
+    readonly client: WebSocketHandlerConnection["client"];
+    readonly request: XRequest;
   }) => void;
   onConnectionClosed?: (args: {
-    client: WebSocketHandlerConnection["client"];
+    readonly client: WebSocketHandlerConnection["client"];
   }) => void;
 };
 

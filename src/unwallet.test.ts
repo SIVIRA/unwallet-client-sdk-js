@@ -191,7 +191,7 @@ describe("UnWallet", () => {
         destURL = result.data;
       }
       expect(destURL.origin + destURL.pathname).toBe(
-        `${uwConfig.frontend.baseURL}/vauthorize`,
+        new URL("/vauthorize", uwConfig.frontend.origin).toString(),
       );
       expect(Object.fromEntries(destURL.searchParams)).toEqual({
         response_type: "id_token",
@@ -230,7 +230,7 @@ describe("UnWallet", () => {
         destURL = result.data;
       }
       expect(destURL.origin + destURL.pathname).toBe(
-        `${uwConfig.frontend.baseURL}/authorize`,
+        new URL("/authorize", uwConfig.frontend.origin).toString(),
       );
       expect(Object.fromEntries(destURL.searchParams)).toEqual({
         response_type: "id_token",
@@ -269,7 +269,7 @@ describe("UnWallet", () => {
           windowURL = result.data;
         }
         expect(windowURL.origin + windowURL.pathname).toBe(
-          `${uwConfig.frontend.baseURL}/x/sign`,
+          new URL("/x/sign", uwConfig.frontend.origin).toString(),
         );
         expect(Object.fromEntries(windowURL.searchParams)).toEqual({
           connectionID: dummy.xConnID,
@@ -309,7 +309,7 @@ describe("UnWallet", () => {
           windowURL = result.data;
         }
         expect(windowURL.origin + windowURL.pathname).toBe(
-          `${uwConfig.frontend.baseURL}/x/sign`,
+          new URL("/x/sign", uwConfig.frontend.origin).toString(),
         );
         expect(Object.fromEntries(windowURL.searchParams)).toEqual({
           connectionID: dummy.xConnID,
@@ -476,7 +476,10 @@ describe("UnWallet", () => {
           windowURL = result.data;
         }
         expect(windowURL.origin + windowURL.pathname).toBe(
-          `${uwConfig.frontend.baseURL}/x/signEIP712TypedData`,
+          new URL(
+            "/x/signEIP712TypedData",
+            uwConfig.frontend.origin,
+          ).toString(),
         );
         expect(Object.fromEntries(windowURL.searchParams)).toEqual({
           connectionID: dummy.xConnID,
@@ -516,7 +519,10 @@ describe("UnWallet", () => {
           windowURL = result.data;
         }
         expect(windowURL.origin + windowURL.pathname).toBe(
-          `${uwConfig.frontend.baseURL}/x/signEIP712TypedData`,
+          new URL(
+            "/x/signEIP712TypedData",
+            uwConfig.frontend.origin,
+          ).toString(),
         );
         expect(Object.fromEntries(windowURL.searchParams)).toEqual({
           connectionID: dummy.xConnID,
@@ -544,6 +550,30 @@ describe("UnWallet", () => {
         digest: dummy.eip712TypedDataDigest,
         signature: dummy.sig,
       } satisfies SignResult);
+    });
+
+    it("rejects on an invalid request: invalid typed data", async () => {
+      const uw = await UnWallet.init({
+        env,
+        clientID: dummy.clientID,
+      });
+
+      const waitToSignEIP712TypedData = uw.signEIP712TypedData({
+        typedData: {
+          ...dummy.eip712TypedData,
+          primaryType: "InvalidPrimaryType",
+        },
+        ticketToken: dummy.ticketToken,
+      });
+
+      expect(windowMock.open).not.toHaveBeenCalled();
+
+      await expect(waitToSignEIP712TypedData).rejects.toThrow(
+        new UWError(
+          "INVALID_REQUEST",
+          'invalid typed data: Invalid primary type `InvalidPrimaryType` must be one of `["Person","Mail"]`.',
+        ),
+      );
     });
 
     it("rejects on an unopened connection", async () => {
@@ -594,30 +624,6 @@ describe("UnWallet", () => {
 
       await expect(waitToSignEIP712TypedData).rejects.toThrow(
         new UWError("CONNECTION_CLOSED"),
-      );
-    });
-
-    it("rejects on an invalid request: invalid typed data", async () => {
-      const uw = await UnWallet.init({
-        env,
-        clientID: dummy.clientID,
-      });
-
-      const waitToSignEIP712TypedData = uw.signEIP712TypedData({
-        typedData: {
-          ...dummy.eip712TypedData,
-          primaryType: "InvalidPrimaryType",
-        },
-        ticketToken: dummy.ticketToken,
-      });
-
-      expect(windowMock.open).not.toHaveBeenCalled();
-
-      await expect(waitToSignEIP712TypedData).rejects.toThrow(
-        new UWError(
-          "INVALID_REQUEST",
-          'invalid typed data: Invalid primary type `InvalidPrimaryType` must be one of `["Person","Mail"]`.',
-        ),
       );
     });
 
@@ -718,7 +724,7 @@ describe("UnWallet", () => {
           windowURL = result.data;
         }
         expect(windowURL.origin + windowURL.pathname).toBe(
-          `${uwConfig.frontend.baseURL}/x/sendTransaction`,
+          new URL("/x/sendTransaction", uwConfig.frontend.origin).toString(),
         );
         expect(Object.fromEntries(windowURL.searchParams)).toEqual({
           connectionID: dummy.xConnID,
@@ -762,7 +768,7 @@ describe("UnWallet", () => {
           windowURL = result.data;
         }
         expect(windowURL.origin + windowURL.pathname).toBe(
-          `${uwConfig.frontend.baseURL}/x/sendTransaction`,
+          new URL("/x/sendTransaction", uwConfig.frontend.origin).toString(),
         );
         expect(Object.fromEntries(windowURL.searchParams)).toEqual({
           connectionID: dummy.xConnID,
@@ -785,6 +791,25 @@ describe("UnWallet", () => {
       await expect(waitToSendTransactionAgain).resolves.toEqual({
         transactionID: dummy.txID,
       } satisfies SendTransactionResult);
+    });
+
+    it("rejects on an invalid request: either value or data is required", async () => {
+      const uw = await UnWallet.init({
+        env,
+        clientID: dummy.clientID,
+      });
+
+      const waitToSendTransaction = uw.sendTransaction({
+        chainID: dummy.chainID,
+        toAddress: dummy.txToAddress,
+        ticketToken: dummy.ticketToken,
+      });
+
+      expect(windowMock.open).not.toHaveBeenCalled();
+
+      await expect(waitToSendTransaction).rejects.toThrow(
+        new UWError("INVALID_REQUEST", "either value or data is required"),
+      );
     });
 
     it("rejects on an unopened connection", async () => {
@@ -841,25 +866,6 @@ describe("UnWallet", () => {
 
       await expect(waitToSendTransaction).rejects.toThrow(
         new UWError("CONNECTION_CLOSED"),
-      );
-    });
-
-    it("rejects on an invalid request: either value or data is required", async () => {
-      const uw = await UnWallet.init({
-        env,
-        clientID: dummy.clientID,
-      });
-
-      const waitToSendTransaction = uw.sendTransaction({
-        chainID: dummy.chainID,
-        toAddress: dummy.txToAddress,
-        ticketToken: dummy.ticketToken,
-      });
-
-      expect(windowMock.open).not.toHaveBeenCalled();
-
-      await expect(waitToSendTransaction).rejects.toThrow(
-        new UWError("INVALID_REQUEST", "either value or data is required"),
       );
     });
 
