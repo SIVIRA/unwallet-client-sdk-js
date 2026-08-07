@@ -8,7 +8,7 @@ import {
   validateTypedData,
 } from "viem";
 
-import { Env, Config, UnWalletConfig, getUnWalletConfigByEnv } from "./config";
+import { Env, Config, UnWalletConfig, envToUnWalletConfig } from "./config";
 import { EIP712TypedData } from "./eip712";
 import { UWError } from "./error";
 import {
@@ -50,12 +50,12 @@ export class UnWallet {
     return new UnWallet({
       env: env,
       clientID: config.clientID,
-      xConnection: await XConnection.init(getUnWalletConfigByEnv(env).xAPI),
+      xConnection: await XConnection.init(envToUnWalletConfig[env].xAPI),
     });
   }
 
-  private get uwConfig(): UnWalletConfig {
-    return getUnWalletConfigByEnv(this.env);
+  private get unWalletConfig(): UnWalletConfig {
+    return envToUnWalletConfig[this.env];
   }
 
   public authorize(args: {
@@ -67,7 +67,7 @@ export class UnWallet {
   }): void {
     const url = new URL(
       `/${args.isVirtual === false ? "" : "v"}authorize`,
-      this.uwConfig.frontend.origin,
+      this.unWalletConfig.frontend.origin,
     );
     {
       url.searchParams.set("response_type", "id_token");
@@ -196,7 +196,7 @@ export class UnWallet {
         },
       });
 
-      const url = new URL(args.path, this.uwConfig.frontend.origin);
+      const url = new URL(args.path, this.unWalletConfig.frontend.origin);
       {
         url.searchParams.set("connectionID", this.xConnection.id);
         url.searchParams.set("clientID", this.clientID);
