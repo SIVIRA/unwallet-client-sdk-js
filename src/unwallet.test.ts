@@ -126,10 +126,6 @@ const dummy = ((): {
 const locationMock = {
   assign: vi.fn(),
 };
-const screenMock = {
-  width: 1920,
-  height: 1080,
-};
 const windowMock = {
   open: vi.fn(),
 };
@@ -153,7 +149,6 @@ beforeAll(() =>
 );
 beforeEach(() => {
   vi.stubGlobal("location", locationMock);
-  vi.stubGlobal("screen", screenMock);
   vi.stubGlobal("window", windowMock);
 });
 afterEach(() => {
@@ -985,13 +980,7 @@ function safeParseAssignedLocationURLInMockCalls(idx: number = 0) {
 
 function safeParseOpenedWindowURLInMockCalls(idx: number = 0) {
   return z
-    .tuple([
-      z.url(),
-      z.literal("_blank"),
-      z.literal(
-        `width=${screenMock.width / 2},height=${screenMock.height},left=${screenMock.width / 4},top=0`,
-      ),
-    ])
+    .tuple([z.url()])
     .transform((val) => new URL(val[0]))
     .safeParse(windowMock.open.mock.calls[idx]);
 }

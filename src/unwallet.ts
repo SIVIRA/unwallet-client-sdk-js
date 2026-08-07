@@ -205,24 +205,11 @@ export class UnWallet {
         }
       }
 
-      openWindow(url);
+      window.open(url.toString());
     });
   }
 
   public close(): void {
     this.xConnection.close();
   }
-}
-
-function openWindow(url: URL): void {
-  const width = screen.width / 2;
-  const height = screen.height;
-  const left = screen.width / 4;
-  const top = 0;
-
-  window.open(
-    url.toString(),
-    "_blank",
-    `width=${width},height=${height},left=${left},top=${top}`,
-  );
 }
