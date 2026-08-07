@@ -70,6 +70,10 @@ export type XAction = (typeof X_ACTIONS)[number];
 export type XRequest = z.infer<typeof xRequestSchema>;
 
 export type XResponse = z.infer<typeof xResponseSchema>;
+export type XResponseType = XResponse["type"];
+export type XResponseValue<T extends XResponseType> = {
+  [T in XResponseType]: Extract<XResponse, { type: T }>["value"];
+}[T];
 
 export type XResponseHandler = {
   readonly resolve: (resp: XResponse) => void;
@@ -94,9 +98,9 @@ export class XConnection {
   private responseHandler: XResponseHandler | null = null;
 
   constructor(args: {
-    id: string;
-    socket: WebSocket;
-    options?: XConnectionOptions | undefined;
+    readonly id: string;
+    readonly socket: WebSocket;
+    readonly options?: XConnectionOptions | undefined;
   }) {
     this.id = args.id;
     this.socket = args.socket;
