@@ -26,10 +26,13 @@ export function base64URLEncode(s: string): string {
     .replace(/=+$/, "");
 }
 
-export function mockXAPI(args: { url: string; handlers?: XAPIMockHandlers }): {
-  server: SetupServer;
-  sendToClient: (data: WebSocketData) => void;
-  closeClient: (code?: number, reason?: string) => void;
+export function mockXAPI(args: {
+  readonly url: string;
+  readonly handlers?: XAPIMockHandlers;
+}): {
+  readonly server: SetupServer;
+  readonly sendToClient: (data: WebSocketData) => void;
+  readonly closeClient: (code?: number, reason?: string) => void;
 } {
   const interceptor = ws.link(args.url);
 
