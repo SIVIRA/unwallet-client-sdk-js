@@ -16,7 +16,7 @@ import {
   XResponseType,
   XResponseValue,
   newUnexpectedXResponseTypeError,
-} from "./x";
+} from "./xconn";
 
 export type AuthorizationResponseMode = "fragment" | "form_post";
 

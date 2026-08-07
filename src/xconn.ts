@@ -75,13 +75,13 @@ export type XResponseValue<T extends XResponseType> = {
   [U in XResponseType]: Extract<XResponse, { type: U }>["value"];
 }[T];
 
-export type XResponseHandler = {
+type XResponseHandler = {
   readonly resolve: (resp: XResponse) => void;
   readonly reject: (err: UWError) => void;
 };
 
-export type XConnectionOptions = {
-  readonly debugHandlers?: XConnectionDebugHandlers;
+export type XConnectionDebugOptions = {
+  readonly handlers?: XConnectionDebugHandlers;
 };
 
 export type XConnectionDebugHandlers = {
@@ -93,24 +93,25 @@ export class XConnection {
   public readonly id: string;
 
   private readonly socket: WebSocket;
-  private readonly options: XConnectionOptions;
+  private readonly debugOptions: XConnectionDebugOptions | null;
 
   private responseHandler: XResponseHandler | null = null;
 
   constructor(args: {
     readonly id: string;
     readonly socket: WebSocket;
-    readonly options?: XConnectionOptions | undefined;
+    readonly debugOptions?: XConnectionDebugOptions | undefined;
   }) {
     this.id = args.id;
     this.socket = args.socket;
-    this.options = args.options ?? {};
+    this.debugOptions = args.debugOptions ?? null;
     this.initListeners();
   }
 
   public static async init(
-    config: UnWalletXAPIConfig,
-    opts?: XConnectionOptions,
+    config: UnWalletXAPIConfig & {
+      readonly debug?: XConnectionDebugOptions | undefined;
+    },
   ): Promise<XConnection> {
     const socket = new WebSocket(config.url);
 
@@ -172,7 +173,7 @@ export class XConnection {
     return new XConnection({
       id,
       socket,
-      options: opts,
+      debugOptions: config.debug,
     });
   }
 
@@ -181,7 +182,7 @@ export class XConnection {
 
     this.socket.onmessage = (event) => {
       if (this.responseHandler === null) {
-        this.options.debugHandlers?.onMessageEventDropped?.(event);
+        this.debugOptions?.handlers?.onMessageEventDropped?.(event);
         return;
       }
 
@@ -220,7 +221,7 @@ export class XConnection {
 
     this.socket.onclose = (event) => {
       if (this.responseHandler === null) {
-        this.options.debugHandlers?.onCloseEventDropped?.(event);
+        this.debugOptions?.handlers?.onCloseEventDropped?.(event);
         return;
       }
 
@@ -277,7 +278,7 @@ export function newUnexpectedXResponseTypeError(resp: XResponse): UWError {
   return new UWError("INVALID_RESPONSE", msgs.join(" "));
 }
 
-export function newConnectionClosedError(event: CloseEvent): UWError {
+function newConnectionClosedError(event: CloseEvent): UWError {
   return new UWError(
     "CONNECTION_CLOSED",
     event.reason.length > 0 ? event.reason : undefined,
