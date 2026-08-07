@@ -20,7 +20,7 @@ import {
 } from "vitest";
 import { z } from "zod";
 
-import { getUnWalletConfigByEnv } from "./config";
+import { envToUnWalletConfig } from "./config";
 import { EIP712TypedData } from "./eip712";
 import { UWError } from "./error";
 import {
@@ -33,7 +33,7 @@ import { SendTransactionResult, SignResult, UnWallet } from "./unwallet";
 import { XResponse } from "./x";
 
 const env = "dev";
-const uwConfig = getUnWalletConfigByEnv(env);
+const uwConfig = envToUnWalletConfig[env];
 
 const dummy = ((): {
   xConnID: string;
