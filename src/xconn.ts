@@ -1,5 +1,5 @@
 import { isHex } from "viem";
-import { z } from "zod";
+import * as z from "zod";
 
 import { UnWalletXAPIConfig } from "./config";
 import { UWError } from "./error";

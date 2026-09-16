@@ -1,7 +1,7 @@
 import { ws, WebSocketData, WebSocketHandlerConnection } from "msw";
 import { SetupServer, setupServer } from "msw/node";
 import { ByteArray, Hex, bytesToHex, toBytes } from "viem";
-import { z } from "zod";
+import * as z from "zod";
 
 import { xRequestPayloadSchema, XRequest } from "./xconn";
 

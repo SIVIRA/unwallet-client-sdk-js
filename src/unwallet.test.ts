@@ -18,7 +18,7 @@ import {
   it,
   vi,
 } from "vitest";
-import { z } from "zod";
+import * as z from "zod";
 
 import { envToUnWalletConfig } from "./config";
 import { EIP712TypedData } from "./eip712";
