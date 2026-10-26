@@ -1,4 +1,4 @@
-import { ws, WebSocketData, WebSocketHandlerConnection } from "msw";
+import { ws, WebSocketData, WebSocketHandlerConnection } from "msw/ws";
 import { SetupServer, setupServer } from "msw/node";
 import { ByteArray, Hex, bytesToHex, toBytes } from "viem";
 import * as z from "zod";
