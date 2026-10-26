@@ -32,21 +32,21 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "viem": "2.57.11",
-    "zod": "4.6.7"
+    "viem": "2.57.x",
+    "zod": "4.6.x"
   },
   "devDependencies": {
-    "@commitlint/cli": "21.2.4",
-    "@commitlint/config-conventional": "21.2.4",
-    "@tsconfig/strictest": "2.0.8",
-    "@vitest/coverage-v8": "5.0.5",
-    "czg": "1.14.0",
-    "husky": "9.1.7",
-    "msw": "3.0.3",
-    "publint": "0.3.25",
-    "tsdown": "0.23.2",
-    "typescript": "6.0.3",
-    "vitest": "5.0.5"
+    "@commitlint/cli": "21.2.x",
+    "@commitlint/config-conventional": "21.2.x",
+    "@tsconfig/strictest": "2.0.x",
+    "@vitest/coverage-v8": "5.0.x",
+    "czg": "1.14.x",
+    "husky": "9.1.x",
+    "msw": "3.0.x",
+    "publint": "0.3.x",
+    "tsdown": "0.23.x",
+    "typescript": "6.0.x",
+    "vitest": "5.0.x"
   },
   "packageManager": "pnpm@12.15.0"
 }
